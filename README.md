@@ -32,12 +32,6 @@ Examples:
 ./gradlew run --args="LEADERBOARD --by-guesses"
 ```
 
-Start an interactive session (reads commands from stdin until you type `exit`):
-
-```bash
-./gradlew bootRun
-```
-
 ## Run (as a native executable)
 
 Build and install the executable once:
@@ -49,10 +43,10 @@ Build and install the executable once:
 This generates `build/install/wurdal/bin/wurdal`. Run it directly without Gradle:
 
 ```bash
-./build/install/wurdal/bin/wurdal REGISTER alice
-./build/install/wurdal/bin/wurdal GUESS alice crane
-./build/install/wurdal/bin/wurdal LEADERBOARD
-./build/install/wurdal/bin/wurdal LEADERBOARD --by-guesses
+./wurdal REGISTER alice
+./wurdal GUESS alice crane
+./wurdal LEADERBOARD
+./wurdal LEADERBOARD --by-guesses
 ```
 
 To make `wurdal` available system-wide from any directory:

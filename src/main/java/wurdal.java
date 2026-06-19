@@ -205,22 +205,14 @@ public class wurdal {
         public enum actions { REGISTER, NEW_GAME, GUESS, LEADERBOARD };
 
         public void Parse(String playerInput){
-            // Check if inpiut is empty
-            if (playerInput.isEmpty()){
-               System.err.println("Invalid command: " + playerInput);
-               System.exit(1);
-            }
-
             // Normalize the player input
             var normInput = playerInput.strip().split(" ");
             // Extract the command
             var command = normInput[0].toUpperCase().replace("-","_");
-            // Short Circuit if command not in actions
-            boolean commandExists = Arrays.stream(actions.values()).anyMatch(action -> action.name().equals(command));
-            if (!commandExists) {
-               System.err.println("Unknown command: " + command);
-               System.exit(1);
-            }
+            // Check if input is empty
+            emptyHandler(command, playerInput);
+            // Check if command exists
+            commandExistsHandler(command, playerInput);
 
             switch (actions.valueOf(command)) {
                 case REGISTER:
@@ -242,19 +234,47 @@ public class wurdal {
 
         }
 
+        private void commandExistsHandler(String command, String fullCommand){
+            // Short Circuit if command not in actions
+            boolean commandExists = Arrays.stream(actions.values()).anyMatch(action -> action.name().equals(command));
+            if (!commandExists) {
+               System.err.println("Unknown command: " + command);
+               System.exit(1);
+            }
+        }
+        private void emptyHandler(String input, String fullCommand){
+            if (input.isEmpty()){
+                // Check if input is empty
+               System.err.println("Invalid command: " + fullCommand);
+               System.exit(1);
+            }
+        }
+
+        private void guessHandler(String input, String fullCommand){
+            if (input.length() != 5){
+                // Check if input is empty
+                System.err.println("Invalid guess: " + fullCommand);
+                System.exit(1);
+            }
+        }
+
+        private void validPlayerHandler(String input, String fullCommand){
+            // Invalid Player Name handling
+            if (input.isEmpty() || pattern.matcher(input).matches()) {
+                System.err.println("Invalid player name");
+                System.exit(1);
+            }
+        }
+
         private void handleRegister(String[] normInput) {
             System.out.println("Called Register");
             if (normInput.length < 2) {
                System.err.println("usage: wurdal REGISTER <player-name>");
                System.exit(2);
             }
-
+            // Validate the playername
             String playerName = normInput[1].strip();
-            // Invalid Player Name handling
-            if (playerName.isEmpty() || pattern.matcher(playerName).matches()) {
-                System.err.println("Invalid player name");
-                System.exit(1);
-            }
+            validPlayerHandler(playerName, String.join(" ", normInput));
             // Player already registered
             if (leaderboard.stream().anyMatch((entry)-> entry.name().equals(playerName))){
                 System.err.println("Player already registered");
@@ -265,13 +285,15 @@ public class wurdal {
         }
 
         private void handleNewGame(String[] normInput) {
-            System.out.println("Called New_Game");
             if (normInput.length < 2) {
                System.err.println("Invalid Arguments: NEW_GAME <player-name>");
                System.exit(1);
             }
 
             String playerName = normInput[1].strip();
+            // validate player name
+            validPlayerHandler(playerName, String.join(" ", normInput));
+            // check if player is registered
             boolean playerExists = leaderboard.stream().anyMatch(entry -> entry.name().equals(playerName));
             if (!playerExists) {
                System.err.println("Player not registered: " + playerName);
@@ -289,9 +311,12 @@ public class wurdal {
                System.err.println("Invalid Arguments: GUESS <player-name> <word>");
                System.exit(1);
             }
-
             String playerName = normInput[1].strip();
             String guessWord = normInput[2].strip();
+
+            emptyHandler(playerName, );
+            guessWord()
+
 
             if (!playerGuesses.containsKey(playerName)) {
                System.err.println("No active game for player: " + playerName);
