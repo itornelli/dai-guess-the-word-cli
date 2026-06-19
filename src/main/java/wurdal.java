@@ -40,8 +40,8 @@ public class wurdal {
 
     private void loadWordDictionary() {
         try {
-            if (Files.exists(Paths.get("game_state/words.txt"))) {
-                List<String> lines = Files.readAllLines(Paths.get("game_state/words.txt"));
+            if (Files.exists(Paths.get("word_bank/wordle_dict.txt"))) {
+                List<String> lines = Files.readAllLines(Paths.get("word_bank/wordle_dict.txt"));
                 for (String line : lines) {
                     String word = line.trim().toLowerCase();
                     if (!word.isEmpty()) {
@@ -50,7 +50,11 @@ public class wurdal {
                 }
             }
             if (wordDictionary.isEmpty()) {
-                System.err.println("Word dictionary is empty or missing at game_state/words.txt");
+                System.err.println("Word dictionary is empty or missing at word_bank/wordle_dict.txt");
+            }
+            else {
+                Files.createDirectories(Paths.get("word_bank"));
+                Files.createFile(Paths.get("word_bank/wordle_dict.txt"));
             }
         } catch (IOException e) {
             System.err.println("Error loading words.txt: " + e.getMessage());
