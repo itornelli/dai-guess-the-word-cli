@@ -3,3 +3,9 @@
 
 # Log Files
 *.log
+
+# Gradle Wrapper files
+.gradle
+
+# Build files
+build
