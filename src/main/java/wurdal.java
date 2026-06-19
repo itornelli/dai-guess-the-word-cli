@@ -68,7 +68,7 @@ public class wurdal {
                         throw new IllegalArgumentException("Invalid Arguments:" + normInput.toString());
                     }
                     String playerName = normInput[1].strip();
-                    leaderboard.add(new LeaderboardEntry(playerName, new ArrayList<Boolean>(){}));
+                    leaderboard.add(new LeaderboardEntry(playerName, new ArrayList<Integer>(){}));
                     break;
                 case NEW_GAME:
                     System.out.println("Called New_Game");

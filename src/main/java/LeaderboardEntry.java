@@ -2,9 +2,10 @@
 
 import java.util.ArrayList;
 // Games are a list of passes or fails 
-public record LeaderboardEntry(String name, ArrayList<Boolean> games) {
+public record LeaderboardEntry(String name, ArrayList<Integer> games) {
 
     public Double getAvgGuesses(){
-        return (double) (this.games.stream().count() / this.games.stream().filter((game) -> (game == true)).count());
+        // Count number of games that are true and divide by total number of games 
+        return (double) this.games.stream().mapToInt(Integer::intValue).average().orElse(0.0);
     }
 }
