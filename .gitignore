@@ -10,5 +10,8 @@
 # Build files
 build
 
+# Game state files
+game_state
+
 # bin
 bin
