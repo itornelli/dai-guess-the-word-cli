@@ -18,7 +18,7 @@ java {
 
 application {
     // Starter CLI entrypoint class.
-    mainClass = 'wurdle'
+    mainClass = 'wurdal'
 }
 
 tasks.named('test') {
