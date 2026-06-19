@@ -4,9 +4,64 @@ Java Wordle Dupe
 
 # Quickstart
 
-To run the application use the gradle wrapper to launch with bootRun, this will start an interactive console session
+## Prerequisites
 
-`./gradlew bootRun`
+- Java 17+
+- The Gradle wrapper is included — no separate Gradle installation required.
+
+## Build
+
+```bash
+./gradlew build
+```
+
+## Run (via Gradle)
+
+Run a single command directly:
+
+```bash
+./gradlew run --args="<command> <args>"
+```
+
+Examples:
+
+```bash
+./gradlew run --args="REGISTER alice"
+./gradlew run --args="GUESS alice crane"
+./gradlew run --args="LEADERBOARD"
+./gradlew run --args="LEADERBOARD --by-guesses"
+```
+
+## Run (as a native executable)
+
+Build and install the executable once:
+
+```bash
+./gradlew installDist
+```
+
+This generates `build/install/wurdal/bin/wurdal`. Run it directly without Gradle:
+
+```bash
+./wurdal REGISTER alice
+./wurdal GUESS alice crane
+./wurdal LEADERBOARD
+./wurdal LEADERBOARD --by-guesses
+```
+
+To make `wurdal` available system-wide from any directory:
+
+```bash
+sudo ln -s "$PWD/build/install/wurdal/bin/wurdal" /usr/local/bin/wurdal
+```
+
+Then simply run:
+
+```bash
+wurdal REGISTER alice
+```
+
+> Re-run `./gradlew installDist` after any code changes to update the executable.
 
 
 

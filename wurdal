@@ -1,0 +1,5 @@
+#!/bin/bash
+# Wrapper script to run wurdal from the project root
+# Usage: ./wurdal <command> [args...]
+
+exec "$(dirname "$0")/build/install/wurdal/bin/wurdal" "$@"
