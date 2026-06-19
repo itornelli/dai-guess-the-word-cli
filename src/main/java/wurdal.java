@@ -86,6 +86,9 @@ public class wurdal {
                     }
                 }
                 System.out.println("Loaded " + leaderboard.size() + " registered players.");
+            } else {
+                Files.createDirectories(Paths.get("game_state"));
+                Files.createFile(Paths.get("game_state/players.txt"));
             }
         } catch (IOException e) {
             System.err.println("Error loading players.txt: " + e.getMessage());
@@ -119,6 +122,9 @@ public class wurdal {
                     }
                 }
                 System.out.println("Loaded game state for " + playerGuesses.size() + " players.");
+            }else{
+                Files.createDirectories(Paths.get("game_state"));
+                Files.createFile(Paths.get("game_state/games.txt"));
             }
         } catch (IOException e) {
             System.err.println("Error loading games.txt: " + e.getMessage());
