@@ -4,6 +4,10 @@ Java Wordle Dupe
 
 # Quickstart
 
+To run the application use the gradle wrapper to launch with bootRun, this will start an interactive console session
+
+`./gradlew bootRun`
+
 
 
 # Rules
