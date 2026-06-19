@@ -4,10 +4,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
+import java.util.Random;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -26,14 +25,54 @@ public class wurdal {
     public Map<String, List<String>> playerGuesses = new HashMap<>();
     public Set<String> currentSeenWords = new HashSet<String>() {};
     public Set<String> currentGames = new HashSet<String>(){};
+    public List<String> wordDictionary = new ArrayList<String>(){};
     public List<LeaderboardEntry> leaderboard = new ArrayList<LeaderboardEntry>(){};
     public CommandLineParser parser = new CommandLineParser(){};
+    public Random random = new Random();
 
     public Pattern pattern = Pattern.compile("[^A-Za-z0-9_-]");
 
     public wurdal() {
         loadPlayersFromFile();
         loadGamesFromFile();
+        loadWordDictionary();
+    }
+
+    private void loadWordDictionary() {
+        try {
+            if (Files.exists(Paths.get("game_state/words.txt"))) {
+                List<String> lines = Files.readAllLines(Paths.get("game_state/words.txt"));
+                for (String line : lines) {
+                    String word = line.trim().toLowerCase();
+                    if (!word.isEmpty()) {
+                        wordDictionary.add(word);
+                    }
+                }
+            }
+            if (wordDictionary.isEmpty()) {
+                System.err.println("Word dictionary is empty or missing at game_state/words.txt");
+            }
+        } catch (IOException e) {
+            System.err.println("Error loading words.txt: " + e.getMessage());
+        }
+    }
+
+    private String chooseRandomWord() {
+        if (wordDictionary.isEmpty()) {
+            throw new IllegalStateException("No words available in dictionary");
+        }
+
+        if (currentSeenWords.size() >= wordDictionary.size()) {
+            currentSeenWords.clear();
+        }
+
+        String chosenWord;
+        do {
+            chosenWord = wordDictionary.get(random.nextInt(wordDictionary.size()));
+        } while (currentSeenWords.contains(chosenWord) && currentSeenWords.size() < wordDictionary.size());
+
+        currentSeenWords.add(chosenWord);
+        return chosenWord;
     }
 
     private void loadPlayersFromFile() {
@@ -260,14 +299,13 @@ public class wurdal {
 
         private void validPlayerHandler(String input, String fullCommand){
             // Invalid Player Name handling
-            if (input.isEmpty() || pattern.matcher(input).matches()) {
+            if (input.isEmpty() || pattern.matcher(input).find()) {
                 System.err.println("Invalid player name");
                 System.exit(1);
             }
         }
 
         private void handleRegister(String[] normInput) {
-            System.out.println("Called Register");
             if (normInput.length < 2) {
                System.err.println("usage: wurdal REGISTER <player-name>");
                System.exit(2);
@@ -297,16 +335,16 @@ public class wurdal {
             boolean playerExists = leaderboard.stream().anyMatch(entry -> entry.name().equals(playerName));
             if (!playerExists) {
                System.err.println("Player not registered: " + playerName);
+                    System.exit(1);
             }
 
-            playerHiddenWords.put(playerName, "");
+                playerHiddenWords.put(playerName, chooseRandomWord());
             playerGuesses.put(playerName, new ArrayList<>());
             printNewGameBoard(DEFAULT_WORD_LENGTH);
             saveGamesToFile();
         }
 
         private void handleGuess(String[] normInput) {
-            System.out.println("Called Guess");
             if (normInput.length < 3) {
                System.err.println("Invalid Arguments: GUESS <player-name> <word>");
                System.exit(1);
@@ -314,12 +352,13 @@ public class wurdal {
             String playerName = normInput[1].strip();
             String guessWord = normInput[2].strip();
 
-            emptyHandler(playerName, );
-            guessWord()
+                validPlayerHandler(playerName, String.join(" ", normInput));
+                guessHandler(guessWord, String.join(" ", normInput));
 
 
             if (!playerGuesses.containsKey(playerName)) {
                System.err.println("No active game for player: " + playerName);
+                    System.exit(1);
             }
 
             currentInput = guessWord;
@@ -329,8 +368,8 @@ public class wurdal {
         }
 
         private void handleLeaderboard(String[] normInput) {
-            System.out.println("Called Leaderboard");
             boolean byGuesses = normInput.length > 1 && normInput[1].equals("--by-guesses");
+            System.out.println("Sorted by: %s".formatted(byGuesses ? "by-guesses" : "by-num-of-games"));
             printLeaderboard(byGuesses);
         }
     }
