@@ -289,12 +289,33 @@ public class wurdal {
             }
         }
 
-        private void guessHandler(String input, String fullCommand){
-            if (input.length() != 5){
-                // Check if input is empty
-                System.err.println("Invalid guess: " + fullCommand);
+        private void guessHandler(String input, String playerName, String fullCommand){
+            // Validate the playerName
+            validPlayerHandler(playerName, String.join(" ", fullCommand));
+            // Check if the player has a game active
+            if (!playerGuesses.containsKey(playerName)) {
+                System.err.println("No active game for player: " + playerName);
                 System.exit(1);
             }
+            // Check if the guess is the word length
+            if (input.length() != DEFAULT_WORD_LENGTH){
+                // Check if input is empty
+                System.err.println("Invalid guess [%s]".formatted(input));
+                System.exit(1);
+            }
+            // Check if the player has already guessed the word
+            if (playerGuesses.get(playerName).contains(input)){
+                // Check if input is empty
+                System.err.println("Player has already guessed [%s]".formatted(input));
+                System.exit(1);
+            }
+            // Check if the player has correctly guessed the word
+            if (input.equals(playerHiddenWords.get(playerName))){
+                var currNumOfGuesses = playerGuesses.get(playerName).stream().count();
+                System.out.println("player [%s] guessed the word in [%d] guesses".formatted(playerName,currNumOfGuesses+1));
+            }
+            // Regardless if they got it or not save the guess
+            playerGuesses.get(playerName).add(input);
         }
 
         private void validPlayerHandler(String input, String fullCommand){
@@ -329,7 +350,6 @@ public class wurdal {
             }
 
             String playerName = normInput[1].strip();
-            // validate player name
             validPlayerHandler(playerName, String.join(" ", normInput));
             // check if player is registered
             boolean playerExists = leaderboard.stream().anyMatch(entry -> entry.name().equals(playerName));
@@ -338,7 +358,7 @@ public class wurdal {
                     System.exit(1);
             }
 
-                playerHiddenWords.put(playerName, chooseRandomWord());
+            playerHiddenWords.put(playerName, chooseRandomWord());
             playerGuesses.put(playerName, new ArrayList<>());
             printNewGameBoard(DEFAULT_WORD_LENGTH);
             saveGamesToFile();
@@ -351,18 +371,7 @@ public class wurdal {
             }
             String playerName = normInput[1].strip();
             String guessWord = normInput[2].strip();
-
-                validPlayerHandler(playerName, String.join(" ", normInput));
-                guessHandler(guessWord, String.join(" ", normInput));
-
-
-            if (!playerGuesses.containsKey(playerName)) {
-               System.err.println("No active game for player: " + playerName);
-                    System.exit(1);
-            }
-
-            currentInput = guessWord;
-            playerGuesses.get(playerName).add(guessWord);
+            guessHandler(guessWord, playerName, String.join(" ", normInput));
             saveGamesToFile();
             printBoardWithGuesses(DEFAULT_WORD_LENGTH, playerGuesses.get(playerName));
         }
