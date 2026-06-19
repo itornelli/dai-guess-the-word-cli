@@ -24,3 +24,23 @@ application {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.named('run') {
+    group = 'application'
+    description = 'Runs the CLI application.'
+    standardInput = System.in
+}
+
+tasks.named('build') {
+    group = 'build'
+    description = 'Assembles and tests this project.'
+}
+
+tasks.register('bootRun', JavaExec) {
+    group = 'application'
+    description = 'Runs the CLI application (bootRun-style alias).'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = application.mainClass
+    standardInput = System.in
+    dependsOn tasks.named('classes')
+}
