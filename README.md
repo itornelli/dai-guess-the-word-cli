@@ -344,3 +344,51 @@ The game uses two word lists:
 - `word_bank/valid_words.txt` — Words accepted as valid guesses
 
 All teams must use the same word lists to ensure consistency.
+
+---
+
+## For Developers
+
+Want to contribute or extend the codebase? Start here:
+
+### Project Structure
+
+The code is organized into focused packages for easy navigation and extension:
+
+```
+src/main/java/wurdal/
+├── App.java                          # Application entry point
+├── game/
+│   └── GameEngine.java              # Core game logic and state
+├── command/
+│   └── CommandLineParser.java       # CLI command routing
+├── leaderboard/
+│   └── LeaderboardEntry.java        # Player stats record
+└── persistence/
+    ├── PersistenceLayer.java        # Storage interface (abstraction)
+    └── FileBasedPersistence.java    # File-based implementation
+```
+
+### Getting Started
+
+```bash
+# Build the project
+./gradlew build
+
+# Run tests
+./gradlew test
+
+# Run a command
+./gradlew run --args="REGISTER alice"
+```
+
+### Documentation
+
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** — How to contribute, code style, adding features
+
+### Key Features for Developers
+
+- **Dependency Injection** — Loosely-coupled, testable code
+- **PersistenceLayer Interface** — Swap storage backends (files → database) without touching game logic
+- **Unit Tests** — Example tests included; test files use mocked persistence
+- **Clear Separation of Concerns** — GameEngine, CommandParser, and Persistence are independent
