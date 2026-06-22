@@ -1,29 +1,33 @@
-# Description
+# Wurdal — Wordle CLI
 
-Java Wordle Dupe
+A command-line Wordle game where players register, play, and compete on a leaderboard. Guess 5-letter words in up to 6 attempts. Each guess reveals letter positions through color-coded feedback.
 
-# Quickstart
+## Table of Contents
 
-## Prerequisites
+- [Quick Start](#quick-start)
+- [How to Play](#how-to-play)
+- [Command Reference](#command-reference)
+- [Game Rules](#game-rules)
+- [Implementation Specification](#implementation-specification)
 
-- Java 17+
-- The Gradle wrapper is included — no separate Gradle installation required.
+---
 
-## Build
+## Quick Start
+
+### Prerequisites
+
+- Java 17 or later
+- Gradle wrapper included (no separate installation needed)
+
+### Build
 
 ```bash
 ./gradlew build
 ```
 
-## Run (via Gradle)
+### Run
 
-Run a single command directly:
-
-```bash
-./gradlew run --args="<command> <args>"
-```
-
-Examples:
+#### Option 1: Via Gradle
 
 ```bash
 ./gradlew run --args="REGISTER alice"
@@ -32,24 +36,23 @@ Examples:
 ./gradlew run --args="LEADERBOARD --by-guesses"
 ```
 
-## Run (as a native executable)
+#### Option 2: As a Native Executable
 
-Build and install the executable once:
+Build and install once:
 
 ```bash
 ./gradlew installDist
 ```
 
-This generates `build/install/wurdal/bin/wurdal`. Run it directly without Gradle:
+Run the executable directly:
 
 ```bash
-./wurdal REGISTER alice
-./wurdal GUESS alice crane
-./wurdal LEADERBOARD
-./wurdal LEADERBOARD --by-guesses
+./build/install/wurdal/bin/wurdal REGISTER alice
+./build/install/wurdal/bin/wurdal GUESS alice crane
+./build/install/wurdal/bin/wurdal LEADERBOARD
 ```
 
-To make `wurdal` available system-wide from any directory:
+**Tip:** Add to your PATH for global access:
 
 ```bash
 sudo ln -s "$PWD/build/install/wurdal/bin/wurdal" /usr/local/bin/wurdal
@@ -61,96 +64,87 @@ Then simply run:
 wurdal REGISTER alice
 ```
 
-> Re-run `./gradlew installDist` after any code changes to update the executable.
+> After code changes, re-run `./gradlew installDist` to update the executable.
 
+---
 
+## How to Play
 
-# Rules
+### Game Flow
 
-Command Contract
-Every implementation must support the same commands, arguments, output format, error format, validation rules, and exit codes.
+1. **Register** a player account
+2. **Start a new game** (a random 5-letter word is chosen)
+3. **Make guesses** (up to 6 attempts)
+4. **Check the leaderboard** to see who's winning
 
-## Commands
+### Feedback on Each Guess
 
-| Command | Purpose |
-|---------|---------|
-| `register <player-name>` | Create a player. |
-| `new-game` | Choose a new secret word and clear previous guesses. |
-| `guess <player-name> <word>` | Submit a guess and display the Wordle board. |
-| `leaderboard [--by-games]` | Show players by accuracy or games completed. |
+Each letter in your guess is color-coded:
 
-## Exit Codes
+- 🟩 **Green** — Letter is in the correct position
+- 🟨 **Yellow** — Letter is in the word but wrong position
+- ⬜ **Gray** — Letter is not in the word
 
-| Exit Code | Meaning |
-|-----------|---------|
-| 0 | Command completed successfully. |
-| 1 | Command failed because of invalid input or game-rule validation. |
-| 2 | Command failed because of incorrect command usage. |
-| 3 | Command failed because of an unexpected application error. |
-Output Rules
-Successful commands write to standard output.
+You win by guessing the word before your 6 attempts run out. A new game clears your previous guesses and picks a new word.
 
-Failed commands write to standard error.
+---
 
-Output should be stable, predictable, and easy to verify.
+## Command Reference
 
-Do not include timestamps, random IDs, framework banners, stack traces, or environment-specific paths in normal command output.
+### Commands at a Glance
 
-Register
-Create a player.
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `REGISTER <name>` | Create a player account | `REGISTER alice` |
+| `NEW_GAME` | Start a new game (pick a random word) | `NEW_GAME` |
+| `GUESS <name> <word>` | Make a guess and display the board | `GUESS alice crane` |
+| `LEADERBOARD [--by-guesses]` | Show rankings (default: by accuracy) | `LEADERBOARD --by-guesses` |
 
+### Exit Codes
 
-wurdal register alex
-Successful output:
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Invalid input or rule violation |
+| 2 | Incorrect command usage |
+| 3 | Unexpected application error |
 
+---
 
-Player registered: alex
-Exit code:
+### REGISTER — Create a Player
 
+Create a new player account.
 
-0
-Register Validation
-A player name is valid when it:
+```bash
+wurdal REGISTER alice
+```
 
-Is not blank.
-Contains only letters, numbers, hyphens, and underscores.
-Is unique.
-If the player name is invalid:
+**Valid player names:**
+- Only letters, numbers, hyphens, and underscores
+- Not blank
+- Unique (no duplicates)
 
+**Errors:**
 
-Error: invalid player name
-Exit code:
+| Condition | Error | Exit Code |
+|-----------|-------|-----------|
+| Name already registered | `Player already registered` | 1 |
+| Invalid characters or blank | `Invalid player name` | 1 |
+| Missing name argument | `usage: wurdal REGISTER <player-name>` | 2 |
 
+---
 
-1
-If the player already exists:
+### NEW_GAME — Start a New Game
 
+Pick a random secret word and display an empty board.
 
-Error: player already exists
-Exit code:
+```bash
+wurdal NEW_GAME
+```
 
+**Output (example for a 5-letter word):**
 
-1
-If the command is missing the player name:
-
-
-Usage: wurdal register <player-name>
-Exit code:
-
-
-2
-New Game
-Choose a new secret word and clear previous guesses.
-
-
-wurdal new-game
-The CLI picks a random word from the word list. Players do not see the chosen word.
-
-The CLI prints an empty board. Each cell is drawn as a box made of asterisks. The number of columns matches the length of the secret word. The board always has six rows.
-
-Successful output (example for a five-letter word):
-
-
+```
 ✨ New game started ✨
 
 *****  *****  *****  *****  *****
@@ -176,252 +170,177 @@ Successful output (example for a five-letter word):
 *****  *****  *****  *****  *****
 *   *  *   *  *   *  *   *  *   *
 *****  *****  *****  *****  *****
-Exit code:
+```
 
+**Notes:**
+- No player sees the same word twice (unless all words have been exhausted)
+- Each NEW_GAME resets your guess history for that word
+- Exit code: 0
 
-0
-New Game Validation
-If all words in the word list have already been seen by all registered players:
+---
 
+### GUESS — Make a Guess
 
-Error: no words available
-Exit code:
+Submit a guess and view the board with feedback.
 
+```bash
+wurdal GUESS alice crane
+```
 
-1
-Guess
-Submit a guess for the current secret word.
+**Valid guesses:**
+- Exactly 5 letters
+- Only letters (a–z, case-insensitive)
+- Must be in the game's dictionary
 
+**Output:** Board showing all guesses with color feedback
 
-wurdal guess <player-name> <word>
-Example:
+**When you win:**
 
+```
+player [alice] guessed the word in [2] guesses
+```
 
-wurdal guess alex crane
-After each guess the CLI prints the full board using the same asterisk-box format as new-game.
+**Errors:**
 
-Each guessed letter is shown centered inside its box. The box is colored to show the result:
+| Condition | Error | Exit Code |
+|-----------|-------|-----------|
+| No active game | `No active game for player: alice` | 1 |
+| Player not registered | `Player not found` | 1 |
+| Invalid guess format | `Invalid guess [xyz]` | 1 |
+| Already guessed this word | `Player has already guessed [crane]` | 1 |
+| Missing arguments | `Usage: wurdal GUESS <player-name> <word>` | 2 |
 
-Green — letter is in the correct position
-Yellow — letter is in the word but in the wrong position
-Gray — letter is not in the word
-Rows that have not yet been guessed remain as empty boxes.
+---
 
-Example board after two guesses (crane, stole) on a five-letter word, with the secret word stone:
+### LEADERBOARD — View Rankings
 
+Display the top players.
 
-*****  *****  *****  *****  *****
-* c *  * r *  * a *  * n *  * e *
-*****  *****  *****  *****  *****
+```bash
+wurdal LEADERBOARD
+```
 
-*****  *****  *****  *****  *****
-* s *  * t *  * o *  * l *  * e *
-*****  *****  *****  *****  *****
+**Default ranking (by accuracy):**
 
-*****  *****  *****  *****  *****
-*   *  *   *  *   *  *   *  *   *
-*****  *****  *****  *****  *****
+```
+Sorted by: by-num-of-games
 
-*****  *****  *****  *****  *****
-*   *  *   *  *   *  *   *  *   *
-*****  *****  *****  *****  *****
-
-*****  *****  *****  *****  *****
-*   *  *   *  *   *  *   *  *   *
-*****  *****  *****  *****  *****
-
-*****  *****  *****  *****  *****
-*   *  *   *  *   *  *   *  *   *
-*****  *****  *****  *****  *****
-The color of each box is set using terminal color codes.
-
-When the player's guess matches the secret word exactly, the board is printed and then:
-
-
-alex solved it in 2 guesses!
-When the guess is not correct, the board is printed with no additional message.
-
-Exit code for both outcomes:
-
-
-0
-Guess Validation
-A guess is valid when it:
-
-Is exactly the same length as the secret word.
-Contains only letters.
-If no game has been started yet (no secret word exists):
-
-
-Error: no active game
-Exit code:
-
-
-1
-If the player does not exist:
-
-
-Error: player not found
-Exit code:
-
-
-1
-If the guess word is invalid:
-
-
-Error: invalid guess
-Exit code:
-
-
-1
-If the command is missing arguments:
-
-
-Usage: wurdal guess <player-name> <word>
-Exit code:
-
-
-2
-Leaderboard
-Show the top players.
-
-
-wurdal leaderboard [--by-games]
-By default, players are ranked by fewest average guesses: the player who solved games in the fewest guesses on average ranks highest.
-
-With --by-games, players are ranked by number of completed games: most games solved first.
-
-Each row shows the player name, games solved, and average guesses per solve.
-
-Default output (ranked by average guesses):
-
-
-Leaderboard
-
-1. alex - 3 games - avg 2.3 guesses
+1. alice - 3 games - avg 2.3 guesses
 2. jordan - 1 game - avg 3.0 guesses
 3. sam - 2 games - avg 4.5 guesses
---by-games output (ranked by games solved):
+```
 
+**Ranking by games completed:**
 
-Leaderboard
+```bash
+wurdal LEADERBOARD --by-guesses
+```
 
-1. alex - 3 games - avg 2.3 guesses
+```
+Sorted by: by-guesses
+
+1. alice - 3 games - avg 2.3 guesses
 2. sam - 2 games - avg 4.5 guesses
 3. jordan - 1 game - avg 3.0 guesses
-Exit code:
+```
 
+**Ranking rules:**
 
-0
-Leaderboard Rules
-Default sort (fewest average guesses):
+- **Default (accuracy):** Fewest average guesses → most games → alphabetical
+- **--by-guesses:** Most games → fewest average guesses → alphabetical
+- Only players with at least one solved game appear
+- Average is shown to one decimal place
 
-Lowest average guess count first.
-Most games solved when averages are tied.
-Player name alphabetically when both are tied.
---by-games sort:
+---
 
-Most games solved first.
-Lowest average guess count when games are tied.
-Player name alphabetically when both are tied.
-Average guess count is rounded to one decimal place.
+## Game Rules
 
-Only players who have solved at least one game appear on the leaderboard.
+### Core Mechanics
 
-If no players have solved a game:
+- **One current word** per game (reset by NEW_GAME)
+- **6 attempts per game**
+- **5-letter words** only
+- **Case-insensitive** guesses (all converted to lowercase internally)
+- **Case-sensitive** player names (alice ≠ Alice)
 
+### Scoring
 
-Leaderboard
+- Recorded only on a correct guess
+- Number of guesses it took is stored (1–6)
+- Losses (-1) are tracked separately
 
-No games completed yet.
-Exit code:
+### Word Selection
 
+- Random word from the dictionary
+- No repeats per player (until word pool exhausted)
+- When all words have been seen by all players, repetition begins
 
-0
-If the command receives an unrecognized argument:
+### Guess Evaluation
 
+Each position is evaluated independently:
 
-Usage: wurdal leaderboard [--by-games]
-Exit code:
+1. Mark all correct-position matches as **green**
+2. For remaining letters, mark in-word-but-wrong-position as **yellow**
+3. Remaining letters are **gray** (not in word)
 
+**Example (secret word: STONE):**
 
-2
-Game Rules
-The application has one current secret word chosen by new-game.
+```
+Guess: CRANE
+- C: gray (not in word)
+- R: gray (not in word)
+- A: gray (not in word)
+- N: yellow (in word, wrong position → position 4)
+- E: green (correct position → position 5)
 
-Each letter in a guess is evaluated independently and its box is colored:
+Guess: STOLE
+- S: green (position 1)
+- T: green (position 2)
+- O: green (position 3)
+- L: yellow (in word, wrong position)
+- E: green (position 5)
+```
 
-Green — letter is in the correct position.
-Yellow — letter appears in the word but in the wrong position.
-Gray — letter does not appear in the word.
-A player solves the game when their guess matches the secret word exactly. The number of guesses it took is recorded for that player.
+---
 
-A new game can be started at any time with new-game. This resets the board and picks a new secret word.
+## Implementation Specification
 
-No player should see the same secret word twice. When a player has already played a given word, that word is excluded from future games for that player. If all words have been used by all registered players, words may repeat.
+### Command Contract
 
-Guess comparison is case-insensitive.
+Every command must:
+- Produce consistent, predictable output
+- Use the exact error messages specified
+- Return the correct exit codes
+- Validate inputs rigorously
 
-Player names are case-sensitive. alex and Alex are different players.
+### Output Rules
 
-All teams must use the same word list.
+- ✅ **Successful commands** → standard output
+- ❌ **Failed commands** → standard error
+- **No timestamps, random IDs, framework output, stack traces, or environment paths** in normal output
 
-Persistence
-The CLI must preserve game state between commands.
+### Persistence
 
-At minimum, it must remember:
+The application must preserve state between commands:
 
-Registered players
-Current secret word (resets with each new-game)
-All guesses made during the current game (to rebuild the board)
-Per-player game history: number of games solved and total guesses used across those solves
-Per-player list of words already seen (to avoid repeats)
-The storage mechanism may vary by implementation. A local JSON file is a common choice.
+- Registered players
+- Current game secret word (resets per NEW_GAME)
+- All guesses in current game (to reconstruct the board)
+- Per-player game history (games solved, total guesses, words already seen)
 
-Suggested Feature Ownership
-Each team may divide the work however it wants.
+### Output Stability
 
-One practical split is:
+- Board format must be identical every time
+- Color codes (ANSI) are used for feedback
+- Error messages must match exactly (case, punctuation, etc.)
 
-Register
-Responsible for:
+---
 
-Creating players
-Validating player names
-Preventing duplicate players
-Persisting new players
-New Game
-Responsible for:
+## Word Bank
 
-Selecting a random secret word from the word list
-Persisting the secret word
-Resetting the board (clearing previous guesses)
-Guess Logic
-Responsible for:
+The game uses two word lists:
 
-Accepting guesses
-Validating players and guess format
-Evaluating each letter against the secret word and choosing color
-Persisting the guess
-Awarding a point when the player solves the game
-Guess Formatting
-Printing the full board after each guess
-Adding colors to the board
-Leaderboard
-Responsible for:
+- `word_bank/wordle_dict.txt` — Words available as secret words (picked for games)
+- `word_bank/valid_words.txt` — Words accepted as valid guesses
 
-Reading persisted players and their game history
-Computing average guess count per player
-Sorting by accuracy (default) or games completed (--by-games)
-Applying tiebreaker rules
-Printing the leaderboard
-Done
-The project is done when:
-
-The repository is created.
-All collaborators have access.
-All commands follow the contract.
-Game state persists between commands.
-The board displays correct color markers after each guess.
-The full game flow works from the command line.
-Wordlist
+All teams must use the same word lists to ensure consistency.
