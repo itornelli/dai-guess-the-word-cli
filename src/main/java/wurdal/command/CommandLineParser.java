@@ -45,7 +45,7 @@ public class CommandLineParser {
     // Helper Functions
     private int getLeaderboardIndexByPlayerName(GameEngine game, String playerName) {
         for (int i = 0; i < game.leaderboard.size(); i++) {
-            if (game.leaderboard.get(i).name().equals(playerName)) {
+            if (game.leaderboard.get(i).name().equals(playerName.toLowerCase())) {
                 return i;
             }
         }
@@ -122,12 +122,19 @@ public class CommandLineParser {
             System.exit(2);
         }
 
-        String playerName = normInput[1].strip();
+        String playerName = normInput[1].strip().toLowerCase();
         validPlayerHandler(game, playerName, String.join(" ", normInput));
-        if (game.leaderboard.stream().anyMatch((entry) -> entry.name().equals(playerName))) {
-            System.err.println("Player already registered");
+        if (game.leaderboard.stream().anyMatch((entry) -> entry.name().equals(playerName.toLowerCase()))) {
+            System.err.println("Error: player already exists.");
             System.exit(1);
         }
+
+        if (!playerName.matches("[A-Za-z0-9_-]+"))
+            System.out.println("Error: Invalid player name.");
+            
+
+        System.out.println("Player registered: %s".formatted(playerName));
+
         game.leaderboard.add(new LeaderboardEntry(playerName, new ArrayList<Integer>() {}));
         game.savePlayersToFile();
     }
@@ -138,9 +145,9 @@ public class CommandLineParser {
             System.exit(1);
         }
 
-        String playerName = normInput[1].strip();
+        String playerName = normInput[1].strip().toLowerCase();
         validPlayerHandler(game, playerName, String.join(" ", normInput));
-        boolean playerExists = game.leaderboard.stream().anyMatch(entry -> entry.name().equals(playerName));
+        boolean playerExists = game.leaderboard.stream().anyMatch(entry -> entry.name().equals(playerName.toLowerCase()));
         if (!playerExists) {
             System.err.println("Error: player not found");
             System.exit(1);
@@ -150,8 +157,6 @@ public class CommandLineParser {
             System.err.println("Error: game in progress");
             System.exit(1);
         }
-
-        if (game.player)
 
         game.playerHiddenWords.put(playerName, game.chooseRandomWord());
         game.playerGuesses.put(playerName, new ArrayList<>());
@@ -164,7 +169,7 @@ public class CommandLineParser {
             System.err.println("Invalid Arguments: GUESS <player-name> <word>");
             System.exit(1);
         }
-        String playerName = normInput[1].strip();
+        String playerName = normInput[1].strip().toLowerCase();
         String guessWord = normInput[2].strip();
         guessHandler(game, guessWord, playerName, String.join(" ", normInput));
         game.saveGamesToFile();

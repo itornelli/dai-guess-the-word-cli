@@ -41,7 +41,7 @@ public class FileBasedPersistence implements PersistenceLayer {
                     String trimmedLine = line.trim();
                     if (!trimmedLine.isEmpty()) {
                         String[] parts = trimmedLine.split(",");
-                        String playerName = parts[0].trim();
+                        String playerName = parts[0].trim().toLowerCase();
                         ArrayList<Integer> games = new ArrayList<>();
 
                         for (int i = 1; i < parts.length; i++) {
@@ -60,7 +60,7 @@ public class FileBasedPersistence implements PersistenceLayer {
                         }
                     }
                 }
-                System.out.println("Loaded " + players.size() + " registered players.");
+                // System.out.println("Loaded " + players.size() + " registered players.");
             } else {
                 createFile(GAME_STATE_DIR, PLAYERS_FILE);
             }
@@ -119,7 +119,7 @@ public class FileBasedPersistence implements PersistenceLayer {
                         guesses.put(playerName, guessList);
                     }
                 }
-                System.out.println("Loaded game state for " + guesses.size() + " players.");
+                // System.out.println("Loaded game state for " + guesses.size() + " players.");
             } else {
                 createFile(GAME_STATE_DIR, GAMES_FILE);
             }
