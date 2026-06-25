@@ -392,3 +392,6 @@ src/main/java/wurdal/
 - **PersistenceLayer Interface** — Swap storage backends (files → database) without touching game logic
 - **Unit Tests** — Example tests included; test files use mocked persistence
 - **Clear Separation of Concerns** — GameEngine, CommandParser, and Persistence are independent
+
+
+dwadwadw
