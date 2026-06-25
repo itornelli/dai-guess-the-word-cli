@@ -34,7 +34,7 @@ public class GameEngineTest {
     
     @Test
     public void testChooseRandomWord() {
-        String word = game.chooseRandomWord();
+        String word = game.chooseRandomWord("alice");
         assertNotNull(word);
         assertTrue(game.guessableWords.contains(word));
     }
@@ -43,21 +43,37 @@ public class GameEngineTest {
     public void testChooseRandomWordTracksSeenWords() {
         Set<String> seenWords = new HashSet<>();
         for (int i = 0; i < game.guessableWords.size(); i++) {
-            String word = game.chooseRandomWord();
+            String word = game.chooseRandomWord("alice");
             assertTrue(seenWords.add(word), "Word should not repeat: " + word);
         }
     }
     
     @Test
-    public void testChooseRandomWordClearsAfterAllSeen() {
+    public void testChooseRandomWordThrowsAfterAllSeen() {
         // Choose all words
         for (int i = 0; i < game.guessableWords.size(); i++) {
-            game.chooseRandomWord();
+            game.chooseRandomWord("alice");
         }
-        
-        // Should not throw; should clear and start over
-        String word = game.chooseRandomWord();
-        assertNotNull(word);
+
+        IllegalStateException exception = assertThrows(
+            IllegalStateException.class,
+            () -> game.chooseRandomWord("alice")
+        );
+        assertEquals("No words available for player", exception.getMessage());
+    }
+
+    @Test
+    public void testChooseRandomWordTracksSeenWordsPerPlayer() {
+        Set<String> aliceSeenWords = new HashSet<>();
+        Set<String> bobSeenWords = new HashSet<>();
+
+        for (int i = 0; i < game.guessableWords.size(); i++) {
+            assertTrue(aliceSeenWords.add(game.chooseRandomWord("alice")));
+            assertTrue(bobSeenWords.add(game.chooseRandomWord("bob")));
+        }
+
+        assertEquals(game.guessableWords.size(), aliceSeenWords.size());
+        assertEquals(game.guessableWords.size(), bobSeenWords.size());
     }
     
     @Test

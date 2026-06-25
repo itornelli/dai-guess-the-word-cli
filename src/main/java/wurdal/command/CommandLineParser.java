@@ -142,7 +142,7 @@ public class CommandLineParser {
     private void handleNewGame(GameEngine game, String[] normInput) {
         if (normInput.length < 2) {
             System.err.println("Invalid Arguments: NEW_GAME <player-name>");
-            System.exit(1);
+            System.exit(2);
         }
 
         String playerName = normInput[1].strip().toLowerCase();
@@ -158,7 +158,14 @@ public class CommandLineParser {
             System.exit(1);
         }
 
-        game.playerHiddenWords.put(playerName, game.chooseRandomWord());
+        if (game.hasSeenAllWords(playerName)) {
+            System.err.println("Error: no words available");
+            System.exit(1);
+        }
+
+        // if (game.player)
+
+        game.playerHiddenWords.put(playerName, game.chooseRandomWord(playerName));
         game.playerGuesses.put(playerName, new ArrayList<>());
         game.printNewGameBoard(GameEngine.DEFAULT_WORD_LENGTH);
         game.saveGamesToFile();

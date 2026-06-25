@@ -40,7 +40,7 @@ public class GameEngine {
     // Game state
     public Map<String, String> playerHiddenWords = new HashMap<>();
     public Map<String, List<String>> playerGuesses = new HashMap<>();
-    public Set<String> currentSeenWords = new HashSet<>();
+    public Map<String, Set<String>> playerSeenWords = new HashMap<>();
     public List<String> wordDictionary = new ArrayList<>();
     public List<String> guessableWords = new ArrayList<>();
     public List<LeaderboardEntry> leaderboard = new ArrayList<>();
@@ -103,15 +103,27 @@ public class GameEngine {
         persistence.saveGameState(playerHiddenWords, playerGuesses);
     }
 
-    public String chooseRandomWord() {
+    public boolean hasSeenAllWords(String playerName) {
+        if (guessableWords.isEmpty()) {
+            return true;
+        }
+
+        Set<String> currentSeenWords = playerSeenWords.getOrDefault(playerName, Set.of());
+        return currentSeenWords.size() >= guessableWords.size();
+    }
+
+    public String chooseRandomWord(String playerName) {
         if (guessableWords.isEmpty()) {
             throw new IllegalStateException("No words available in dictionary");
         }
 
-        if (currentSeenWords.size() >= guessableWords.size()) {
-            currentSeenWords.clear();
-        }
+        Set<String> currentSeenWords = playerSeenWords.computeIfAbsent(playerName, k -> new HashSet<>());
 
+        if (hasSeenAllWords(playerName)) {
+            throw new IllegalStateException("No words available for player");
+        }
+        
+        // Keep guessing words until the random next word is not in the currentSeenWords for the player
         String chosenWord;
         do {
             chosenWord = guessableWords.get(random.nextInt(guessableWords.size()));
