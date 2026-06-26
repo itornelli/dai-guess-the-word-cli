@@ -13,6 +13,7 @@ public class App {
     public static void main(String[] args) {
         if (args.length == 0 || hasSpringArgs(args)) {
             SpringApplication.run(App.class, args);
+
         } else {
             runCLI(args);
         }
