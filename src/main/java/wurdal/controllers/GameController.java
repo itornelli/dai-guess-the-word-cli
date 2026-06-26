@@ -1,10 +1,7 @@
 package wurdal.controllers;
 
-import org.apache.coyote.Response;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import wurdal.AppConfig;
 import wurdal.game.GameEngine;
 import wurdal.repository.GameRepository;
 import wurdal.repository.PlayerRepository;
@@ -12,7 +9,6 @@ import wurdal.structures.BoardRes;
 import wurdal.structures.Game;
 import wurdal.structures.Player;
 
-import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.Optional;
 

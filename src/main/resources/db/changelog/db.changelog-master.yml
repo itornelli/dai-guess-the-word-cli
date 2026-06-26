@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: classpath:db/changelog/001a-create-player-table.sql
+  - include:
+      file: classpath:db/changelog/002a-create-game-table.sql
