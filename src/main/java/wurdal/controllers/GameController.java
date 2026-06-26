@@ -17,11 +17,11 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         return ResponseEntity.ok(player);
     }
     @PostMapping(value="/guess/{guessWord}")
-    public ResponseEntity<String> guess(@PathVariable String guessWord, @ResponseBody Player player) {
-        Game updated = gameRepo.
+    public ResponseEntity<String> guess(@PathVariable String guessWord, @RequestBody Player player) {
+        Game updated = gameRepo.getByPlayerId(player.getId());
         updated.addGuessWord(guessWord);
         gameRepo.save(updated);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok("updated game");
     }
     //[READ]
     @GetMapping("/board/{id}")
