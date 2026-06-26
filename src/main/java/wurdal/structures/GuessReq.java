@@ -1,4 +1,4 @@
 package wurdal.structures;
 
-public record GuessReq(String word) {
+public record GuessReq(String guess) {
 }

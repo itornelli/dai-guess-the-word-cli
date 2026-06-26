@@ -15,3 +15,7 @@ databaseChangeLog:
       file: classpath:db/changelog/007a-create-player-in-game-trigger.sql
   - include:
       file: classpath:db/changelog/008a-add-status-to-games.sql
+  - include:
+      file: classpath:db/changelog/009a-enforce-current-guesses-not-null.sql
+  - include:
+      file: classpath:db/changelog/010a-add-games-player-fk.sql

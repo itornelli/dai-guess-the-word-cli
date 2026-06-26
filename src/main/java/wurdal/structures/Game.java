@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -16,7 +17,7 @@ public class Game {
 
     private String hiddenWord;
     @JdbcTypeCode(SqlTypes.ARRAY)
-    private List<String> currentGuesses;
+    private List<String> currentGuesses = new ArrayList<>();
     private Integer playerId;
     private Integer status;
 
@@ -49,4 +50,5 @@ public class Game {
         this.hiddenWord = word;
     }
     public void setStatus(Integer status) {this.status = status;}
+    public void emergencySetCurrentGuesses(List<String> current) {this.currentGuesses = current;}
 }

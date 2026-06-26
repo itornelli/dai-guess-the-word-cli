@@ -1,5 +1,6 @@
 package wurdal.controllers;
 
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import wurdal.game.GameEngine;
@@ -14,7 +15,7 @@ import java.util.Optional;
 @RestController
 public record GameController(PlayerRepository playerRepo, GameRepository gameRepo, GameEngine gameEngine) {
     //[CREATE]
-    @PostMapping(value="/register")
+    @PostMapping(value="/player")
     public ResponseEntity<BoardRes> register(@RequestBody Player player) {
         Player saved = playerRepo.save(player);
         if (saved.isInGame()) {
@@ -47,26 +48,26 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
 
     }
 
-    //OLD
-    @PostMapping(value="/guess/{guessWord}")
-    //    public void printBoardWithGuesses(int wordLength, String hiddenWord, List<String> guesses)
-    public ResponseEntity<BoardRes> guess(@PathVariable String guessWord, @RequestBody Player player) {
-        if (player.getId() == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        Optional<Game> gameOpt = gameRepo.findFirstByPlayerIdOrderByIdDesc(player.getId());
-        if (gameOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Game updated = gameOpt.get();
-        updated.addGuessWord(guessWord);
-        gameRepo.save(updated);
-        //return the board string
-        return ResponseEntity.ok(new BoardRes(player.getId(), player.getName(), updated.getHiddenWord().length(), updated.getHiddenWord(), updated.getCurrentGuesses()));
-    }
+//    //OLD
+//    @PostMapping(value="/guess/{guessWord}")
+//    public ResponseEntity<BoardRes> guess(@PathVariable String guessWord, @RequestBody Player player) {
+//        if (player.getId() == null) {
+//            return ResponseEntity.badRequest().build();
+//        }
+//        Optional<Game> gameOpt = gameRepo.findFirstByPlayerIdOrderByIdDesc(player.getId());
+//        if (gameOpt.isEmpty()) {
+//            return ResponseEntity.notFound().build();
+//        }
+//        Game updated = gameOpt.get();
+//        updated.addGuessWord(guessWord);
+//        gameRepo.save(updated);
+//        //return the board string
+//        return ResponseEntity.ok(new BoardRes(player.getId(), player.getName(), updated.getHiddenWord().length(), updated.getHiddenWord(), updated.getCurrentGuesses()));
+//    }
+    //public void printBoardWithGuesses(int wordLength, String hiddenWord, List<String> guesses)
     @PostMapping(value="/{playerId}/guess")
     public ResponseEntity<GuessRes> guessById(@PathVariable Integer playerId, @RequestBody GuessReq guessReq) {
-        String guessWord = guessReq.word();
+        String guessWord = guessReq.guess();
 
         Optional<Game> gameOpt = gameRepo.findFirstByPlayerIdOrderByIdDesc(playerId);
         if (gameOpt.isEmpty()) {
@@ -76,12 +77,23 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         if (play.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
         Player player = play.get();
         Game updated = gameOpt.get();
+
+        if(guessWord.length() != updated.getHiddenWord().length()) {
+            int wordLength = updated.getHiddenWord().length();
+            return ResponseEntity.badRequest().header("word-length", Integer.toString(wordLength)).build();
+        }
+
+        if (updated.getCurrentGuesses() == null) {
+            updated.emergencySetCurrentGuesses(new ArrayList<>());
+        }
         if (updated.getStatus() == 1 && updated.getCurrentGuesses().size() < 6) {
             updated.addGuessWord(guessWord);
             if (guessWord.equals(updated.getHiddenWord())) {
                 updated.setStatus(0);
+                player.setGamesWon(player.gamesWon() + 1);
             }
             else if (updated.getCurrentGuesses().size() >= 6) {
                 updated.setStatus(2);
@@ -130,7 +142,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         return ResponseEntity.ok(guessResponse);
     }
     //[READ]
-    //    public void printBoardWithGuesses(int wordLength, String hiddenWord, List<String> guesses)
+    //public void printBoardWithGuesses(int wordLength, String hiddenWord, List<String> guesses)
     @GetMapping("/board/{playerId}")
     public ResponseEntity<BoardRes> board(@PathVariable Integer playerId) {
         if (playerId == null) {
