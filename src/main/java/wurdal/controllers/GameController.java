@@ -13,9 +13,10 @@ public record GameController(GameRepository gameRepo) {
         gameRepo.save(player);
         return ResponseEntity.ok(player);
     }
-    //[READ]
     @GetMapping(value="/guess/{guessWord}")
     public ResponseEntity<String> guess(@PathVariable String guessWord) {
-
+        gameRepo.
     }
+    //[READ]
+
 }
