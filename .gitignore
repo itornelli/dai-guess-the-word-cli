@@ -15,3 +15,7 @@ game_state
 
 # bin
 bin
+
+.idea
+/state.json
+.idea/

@@ -1,5 +1,7 @@
 plugins {
     id 'application'
+    id 'org.springframework.boot' version '3.3.0'
+    id 'io.spring.dependency-management' version '1.1.4'
 }
 
 repositories {
@@ -7,8 +9,10 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 java {
@@ -18,30 +22,9 @@ java {
 }
 
 application {
-    // Starter CLI entrypoint class.
     mainClass = 'wurdal.App'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
-}
-
-tasks.named('run') {
-    group = 'application'
-    description = 'Runs the CLI application.'
-    standardInput = System.in
-}
-
-tasks.named('build') {
-    group = 'build'
-    description = 'Assembles and tests this project.'
-}
-
-tasks.register('bootRun', JavaExec) {
-    group = 'application'
-    description = 'Runs the CLI application (bootRun-style alias).'
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = application.mainClass
-    standardInput = System.in
-    dependsOn tasks.named('classes')
 }
