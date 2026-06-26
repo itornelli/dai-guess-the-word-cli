@@ -1,7 +1,10 @@
 package wurdal.structures;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -13,9 +16,10 @@ public class Game {
     private Integer id;
 
     private String hiddenWord;
-    @ElementCollection
-    private List<String> currentGuesses;
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<String> currentGuesses = new ArrayList<>();
     private Integer playerId;
+    private Integer status;
 
     protected Game() {
         //required by JPA
@@ -40,8 +44,11 @@ public class Game {
     public Integer getPlayerId() {
         return this.playerId;
     }
+    public Integer getStatus() {return this.status;}
 
     public void setHiddenWord(String word) {
         this.hiddenWord = word;
     }
+    public void setStatus(Integer status) {this.status = status;}
+    public void emergencySetCurrentGuesses(List<String> current) {this.currentGuesses = current;}
 }
