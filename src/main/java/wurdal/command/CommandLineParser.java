@@ -1,5 +1,11 @@
 package wurdal.command;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import wurdal.game.GameEngine;
@@ -12,6 +18,9 @@ import wurdal.leaderboard.LeaderboardEntry;
 public class CommandLineParser {
 
     public enum actions { REGISTER, NEW_GAME, GUESS, LEADERBOARD }
+
+    private static final String API_BASE = "http://localhost:8080";
+    private static final String SESSION_FILE = "game_state/session.txt";
 
     public void Parse(GameEngine game, String playerInput) {
         // Normalize the player input
@@ -118,25 +127,69 @@ public class CommandLineParser {
 
     private void handleRegister(GameEngine game, String[] normInput) {
         if (normInput.length < 2) {
-            System.err.println("usage: wurdal REGISTER <player-name>");
-            System.exit(2);
-        }
-
-        String playerName = normInput[1].strip().toLowerCase();
-        validPlayerHandler(game, playerName, String.join(" ", normInput));
-        if (game.leaderboard.stream().anyMatch((entry) -> entry.name().equals(playerName.toLowerCase()))) {
-            System.err.println("Error: player already exists.");
+            // Check if there was a blank name (e.g. "register   ")
+            // In that case normInput only has ["register"] after split
+            System.err.println("Name cannot be empty.");
             System.exit(1);
         }
 
-        if (!playerName.matches("[A-Za-z0-9_-]+"))
-            System.out.println("Error: Invalid player name.");
-            
+        String playerName = normInput[1].strip();
 
-        System.out.println("Player registered: %s".formatted(playerName));
+        if (playerName.isBlank()) {
+            System.err.println("Name cannot be empty.");
+            System.exit(1);
+        }
 
-        game.leaderboard.add(new LeaderboardEntry(playerName, new ArrayList<Integer>() {}));
-        game.savePlayersToFile();
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            String jsonBody = "{\"name\": \"%s\"}".formatted(playerName);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(API_BASE + "/players"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 201) {
+                // Extract id from response (simple parse: {"id":1,"name":"alice"})
+                String body = response.body();
+                String idStr = body.split("\"id\":")[1].split("[,}]")[0].trim();
+
+                // Store session
+                Files.createDirectories(Paths.get("game_state"));
+                Files.writeString(Paths.get(SESSION_FILE), idStr);
+
+                // Fetch the board
+                HttpRequest boardRequest = HttpRequest.newBuilder()
+                        .uri(URI.create(API_BASE + "/players/" + idStr + "/board"))
+                        .GET()
+                        .build();
+
+                HttpResponse<String> boardResponse = client.send(boardRequest, HttpResponse.BodyHandlers.ofString());
+
+                System.out.println("May the odds be in your favor %s!".formatted(playerName));
+                game.printNewGameBoard(GameEngine.DEFAULT_WORD_LENGTH);
+
+            } else if (response.statusCode() == 409) {
+                System.err.println("That name is already taken. Please choose another.");
+                System.exit(1);
+            } else if (response.statusCode() == 400) {
+                System.err.println("Name cannot be empty.");
+                System.exit(1);
+            } else {
+                System.err.println("Unexpected error: " + response.body());
+                System.exit(1);
+            }
+
+        } catch (java.net.ConnectException e) {
+            System.err.println("Looks like the wurdal servers are taking a loss... try again later!");
+            System.exit(1);
+        } catch (Exception e) {
+            System.err.println("Looks like the wurdal servers are taking a loss... try again later!");
+            System.exit(1);
+        }
     }
 
     private void handleNewGame(GameEngine game, String[] normInput) {

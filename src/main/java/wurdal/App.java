@@ -11,7 +11,7 @@ import wurdal.persistence.PersistenceLayer;
 public class App {
 
     public static void main(String[] args) {
-        if (args.length == 0 || hasSpringArgs(args)) {
+        if (args.length == 0) {
             SpringApplication.run(App.class, args);
 
         } else {
@@ -27,14 +27,5 @@ public class App {
         String commandLine = String.join(" ", args);
         game.parser.Parse(game, commandLine);
         System.exit(0);
-    }
-
-    private static boolean hasSpringArgs(String[] args) {
-        for (String arg : args) {
-            if (arg.startsWith("--") || arg.startsWith("-D")) {
-                return true;
-            }
-        }
-        return false;
     }
 }
