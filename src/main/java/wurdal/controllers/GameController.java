@@ -16,9 +16,15 @@ import java.util.Optional;
 public record GameController(PlayerRepository playerRepo, GameRepository gameRepo, GameEngine gameEngine) {
     //[CREATE]
     @PostMapping(value="/register")
-    public ResponseEntity<Player> register(@RequestBody Player player) {
+    public ResponseEntity<BoardRes> register(@RequestBody Player player) {
         Player saved = playerRepo.save(player);
-        return ResponseEntity.ok(saved);
+        if (saved.isInGame()) {
+            //TODO(This should have some type of header that will say the player is in a game)
+            return ResponseEntity.badRequest().build();
+        }
+        Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), saved.getId());
+        Game savedGame = gameRepo.save(newGame);
+        return ResponseEntity.ok(new BoardRes(player.getId(), player.getName(), savedGame.getHiddenWord().length(), savedGame.getHiddenWord(), savedGame.getCurrentGuesses()));
     }
 
     //    public void printNewGameBoard(int wordLength)
@@ -33,8 +39,8 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
         Player player = play.get();
         if (player.isInGame()) {
-            //TODO(This should have some type of header that will say the player is in a game)
-            return ResponseEntity.badRequest().build();
+            //start new game (maybe change this idk)
+            //uses 007a-create-player-in-game-trigger
         }
         Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), playerId);
         Game saved = gameRepo.save(newGame);
