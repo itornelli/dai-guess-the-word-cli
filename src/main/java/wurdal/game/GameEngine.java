@@ -29,13 +29,13 @@ public class GameEngine {
 
     public static final int DEFAULT_WORD_LENGTH = 5;
     public static final int BOARD_ROWS = 6;
-    private static final String CELL_BORDER = "*****";
-    private static final String ANSI_RESET = "\u001B[0m";
-    private static final String ANSI_BLUE = "\u001B[34m";
-    private static final String ANSI_ORANGE = "\u001B[38;5;208m";
-    private static final String ANSI_GREEN = "\u001B[32m";
-    private static final String ANSI_YELLOW = "\u001B[33m";
-    private static final String CELL_EMPTY = ANSI_ORANGE + "*   *" + ANSI_RESET;
+    public static final String CELL_BORDER = "*****";
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_ORANGE = "\u001B[38;5;208m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String CELL_EMPTY = ANSI_ORANGE + "*   *" + ANSI_RESET;
 
     // Game state
     public Map<String, String> playerHiddenWords = new HashMap<>();
@@ -187,7 +187,7 @@ public class GameEngine {
         return ansiColor + "* " + letter + " *" + ANSI_RESET;
     }
 
-    private String[] evaluateGuessColors(String hiddenWord, String guess) {
+    public String[] evaluateGuessColors(String hiddenWord, String guess) {
         String normalizedHiddenWord = hiddenWord.toLowerCase();
         String normalizedGuess = guess.toLowerCase();
         String[] colorCodes = new String[DEFAULT_WORD_LENGTH];

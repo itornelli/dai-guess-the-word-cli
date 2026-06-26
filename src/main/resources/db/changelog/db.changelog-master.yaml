@@ -13,3 +13,5 @@ databaseChangeLog:
       file: classpath:db/changelog/006a-add-not-null-is-in-game.sql
   - include:
       file: classpath:db/changelog/007a-create-player-in-game-trigger.sql
+  - include:
+      file: classpath:db/changelog/008a-add-status-to-games.sql
