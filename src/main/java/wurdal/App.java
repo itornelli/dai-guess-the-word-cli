@@ -1,5 +1,7 @@
 package wurdal;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import wurdal.command.CommandLineParser;
 import wurdal.game.GameEngine;
 import wurdal.persistence.FileBasedPersistence;
@@ -13,9 +15,11 @@ import wurdal.persistence.PersistenceLayer;
  * - CommandLineParser: CLI command routing
  * - GameEngine: Core game logic
  */
+@SpringBootApplication
 public class App {
     
     public static void main(String[] args) {
+        SpringApplication.run(App.class, args);
         // Initialize persistence layer (swap this for different storage backends)
         PersistenceLayer persistence = new FileBasedPersistence();
         
