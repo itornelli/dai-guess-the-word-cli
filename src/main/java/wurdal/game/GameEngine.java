@@ -187,10 +187,10 @@ public class GameEngine {
         return ansiColor + "* " + letter + " *" + ANSI_RESET;
     }
 
-    public String[] evaluateGuessColors(String hiddenWord, String guess) {
+    public String[] evaluateGuessColors(String hiddenWord, String guess, int wordLength) {
         String normalizedHiddenWord = hiddenWord.toLowerCase();
         String normalizedGuess = guess.toLowerCase();
-        String[] colorCodes = new String[DEFAULT_WORD_LENGTH];
+        String[] colorCodes = new String[wordLength];
         int[] letterCounts = new int[26];
 
         for (int i = 0; i < normalizedHiddenWord.length(); i++) {
@@ -200,7 +200,7 @@ public class GameEngine {
             }
         }
 
-        for (int i = 0; i < DEFAULT_WORD_LENGTH; i++) {
+        for (int i = 0; i < wordLength; i++) {
             if (i >= normalizedGuess.length()) {
                 colorCodes[i] = ANSI_RESET;
                 continue;
@@ -217,7 +217,7 @@ public class GameEngine {
             }
         }
 
-        for (int i = 0; i < DEFAULT_WORD_LENGTH; i++) {
+        for (int i = 0; i < wordLength; i++) {
             if (i >= normalizedGuess.length()) {
                 continue;
             }
@@ -248,7 +248,7 @@ public class GameEngine {
 
             if (row < guessList.size()) {
                 String guess = guessList.get(row);
-                String[] colorCodes = evaluateGuessColors(hiddenWord, guess);
+                String[] colorCodes = evaluateGuessColors(hiddenWord, guess, guess.length());
                 StringJoiner guessRow = new StringJoiner("  ");
                 for (int col = 0; col < wordLength; col++) {
                     if (col < guess.length()) {

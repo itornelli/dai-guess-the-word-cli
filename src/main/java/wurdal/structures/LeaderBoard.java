@@ -2,6 +2,5 @@ package wurdal.structures;
 
 import java.util.List;
 
-public interface GuessRes {
-
+public record LeaderBoard(List<Player> players) {
 }

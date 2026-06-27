@@ -19,3 +19,7 @@ databaseChangeLog:
       file: classpath:db/changelog/009a-enforce-current-guesses-not-null.sql
   - include:
       file: classpath:db/changelog/010a-add-games-player-fk.sql
+  - include:
+      file: classpath:db/changelog/011a-add-player-stats-columns.sql
+  - include:
+      file: classpath:db/changelog/012a-alter-average-guesses-to-double.sql

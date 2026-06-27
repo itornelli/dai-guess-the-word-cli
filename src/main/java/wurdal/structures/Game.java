@@ -19,7 +19,7 @@ public class Game {
     @JdbcTypeCode(SqlTypes.ARRAY)
     private List<String> currentGuesses = new ArrayList<>();
     private Integer playerId;
-    private Integer status;
+    private Integer status = 1;
 
     protected Game() {
         //required by JPA

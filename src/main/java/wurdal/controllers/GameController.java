@@ -1,6 +1,7 @@
 package wurdal.controllers;
 
 import org.apache.coyote.Response;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import wurdal.game.GameEngine;
@@ -12,8 +13,82 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+
 @RestController
 public record GameController(PlayerRepository playerRepo, GameRepository gameRepo, GameEngine gameEngine) {
+    static final String REGISTER_ENDPOINT = "/player";
+    static final String NEW_GAME_ENDPOINT = "/new-game/{playerId}";
+    static final String GUESS_ENDPOINT = "/{playerId}/guess";
+    static final String BOARD_ENDPOINT = "/{playerId}/board";
+    static final String LOGIN_ENDPOINT = "/sessions";
+    static final String LOGOUT_ENDPOINT = "";
+    static final String LEADERBOARD_ENDPOINT = "/leaderboard";
+
+    static final String[] GUESS_ENDPOINT_LINKS = {GUESS_ENDPOINT, BOARD_ENDPOINT};
+    static final String[] BOARD_ENDPOINT_LINKS = {GUESS_ENDPOINT, BOARD_ENDPOINT};
+    static final String[] NEWGAME_ENDPOINT_LINKS = {REGISTER_ENDPOINT, NEW_GAME_ENDPOINT, GUESS_ENDPOINT, BOARD_ENDPOINT};
+    static final String[] REGISTER_LINKS = {REGISTER_ENDPOINT, NEW_GAME_ENDPOINT, GUESS_ENDPOINT, BOARD_ENDPOINT};
+
+    static final String[] ALL_LINKS = {REGISTER_ENDPOINT, NEW_GAME_ENDPOINT, GUESS_ENDPOINT, BOARD_ENDPOINT};
+    public Links buildLinkForPlayer(String[] endpoints, Player player) {
+        Links.Register registerLink = null;
+        Links.Login loginLink = null;
+        Links.Logout logoutLink = null;
+        Links.Leaderboard leaderboardLink = null;
+        Links.Board boardLink = null;
+        Links.Guess guessLink = null;
+
+        for (String ep : endpoints) {
+            switch(ep) {
+                case REGISTER_ENDPOINT -> {
+                    registerLink = new Links.Register(REGISTER_ENDPOINT);
+                }
+                case NEW_GAME_ENDPOINT -> {
+
+                }
+                case GUESS_ENDPOINT -> {
+                    String href = GUESS_ENDPOINT.substring(0, GUESS_ENDPOINT.indexOf("{")) + player.getId() + GUESS_ENDPOINT.substring(GUESS_ENDPOINT.indexOf("}")+1, GUESS_ENDPOINT.length());
+                    guessLink = new Links.Guess(href);
+                }
+                case BOARD_ENDPOINT -> {
+                    String href = BOARD_ENDPOINT.substring(0, BOARD_ENDPOINT.indexOf("{")) + player.getId() + BOARD_ENDPOINT.substring(BOARD_ENDPOINT.indexOf("}")+1, BOARD_ENDPOINT.length());
+                    boardLink = new Links.Board(href);
+                }
+            }
+        }
+
+        return new Links(registerLink, loginLink, logoutLink, leaderboardLink, guessLink, boardLink);
+    }
+    public Links buildAllLinks() {
+        Links.Register registerLink = null;
+        Links.Login loginLink = null;
+        Links.Logout logoutLink = null;
+        Links.Leaderboard leaderboardLink = null;
+        Links.Board boardLink = null;
+        Links.Guess guessLink = null;
+
+        for (String ep : ALL_LINKS) {
+            switch(ep) {
+                case REGISTER_ENDPOINT -> {
+                    registerLink = new Links.Register(REGISTER_ENDPOINT);
+                }
+                case NEW_GAME_ENDPOINT -> {
+
+                }
+                case GUESS_ENDPOINT -> {
+                    String href = GUESS_ENDPOINT;
+                    guessLink = new Links.Guess(href);
+                }
+                case BOARD_ENDPOINT -> {
+                    String href = BOARD_ENDPOINT;
+                    boardLink = new Links.Board(href);
+                }
+            }
+        }
+
+        return new Links(registerLink, loginLink, logoutLink, leaderboardLink, guessLink, boardLink);
+    }
+
     //[CREATE]
     @PostMapping(value="/player")
     public ResponseEntity<BoardRes> register(@RequestBody Player player) {
@@ -24,7 +99,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
         Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), saved.getId());
         Game savedGame = gameRepo.save(newGame);
-        return ResponseEntity.ok(new BoardRes(player.getId(), player.getName(), savedGame.getHiddenWord().length(), savedGame.getHiddenWord(), savedGame.getCurrentGuesses()));
+        return ResponseEntity.ok(new BoardRes(buildLinkForPlayer(REGISTER_LINKS, player), player.getId(), player.getName(), savedGame.getHiddenWord().length(), savedGame.getHiddenWord(), savedGame.getCurrentGuesses()));
     }
 
     //    public void printNewGameBoard(int wordLength)
@@ -44,7 +119,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
         Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), playerId);
         Game saved = gameRepo.save(newGame);
-        return ResponseEntity.ok(new BoardRes(player.getId(), player.getName(), saved.getHiddenWord().length(), saved.getHiddenWord(), saved.getCurrentGuesses()));
+        return ResponseEntity.ok(new BoardRes(buildLinkForPlayer(NEWGAME_ENDPOINT_LINKS, player), player.getId(), player.getName(), saved.getHiddenWord().length(), saved.getHiddenWord(), saved.getCurrentGuesses()));
 
     }
 
@@ -83,7 +158,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
 
         if(guessWord.length() != updated.getHiddenWord().length()) {
             int wordLength = updated.getHiddenWord().length();
-            return ResponseEntity.badRequest().header("word-length", Integer.toString(wordLength)).build();
+            return ResponseEntity.badRequest().body(new GuessResError(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player), new GuessResError.Error("Guess must be exactly " + wordLength + " letters")));
         }
 
         if (updated.getCurrentGuesses() == null) {
@@ -101,10 +176,10 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
 
 
-        List<GuessRes.Guess> guessList = new ArrayList<>();
+        List<GuessResPos.Guess> guessList = new ArrayList<>();
         for (String guess : updated.getCurrentGuesses()) {
-            List<GuessRes.LetterResult> letterResults = new ArrayList<>();
-            String[] colors = gameEngine.evaluateGuessColors(updated.getHiddenWord(), guessWord);
+            List<GuessResPos.LetterResult> letterResults = new ArrayList<>();
+            String[] colors = gameEngine.evaluateGuessColors(updated.getHiddenWord(), guess, updated.getHiddenWord().length());
             for(int i = 0; i < guess.length(); i++) {
                 String colorResult = "";
                 if(colors[i].equals(GameEngine.ANSI_GREEN)) {
@@ -116,12 +191,13 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
                 else {
                     colorResult = "none";
                 }
-                GuessRes.LetterResult result = new GuessRes.LetterResult(guess.charAt(i), colorResult);
+                GuessResPos.LetterResult result = new GuessResPos.LetterResult(guess.charAt(i), colorResult);
                 letterResults.add(result);
             }
-            GuessRes.Guess guessObj = new GuessRes.Guess(letterResults);
+            GuessResPos.Guess guessObj = new GuessResPos.Guess(letterResults);
             guessList.add(guessObj);
         }
+
         String resultStatus = "";
         Integer status = updated.getStatus();
         if (status == 0) {
@@ -135,10 +211,10 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
 
         gameRepo.save(updated);
-        GuessRes guessResponse = new GuessRes(
-                new GuessRes.User(player.getId(),player.getName()),
-                new GuessRes.Current(updated.getHiddenWord().length(),guessList,
-                        new GuessRes.Result(resultStatus, (status == 0 || status == 2)? updated.getHiddenWord() : null)));
+        GuessRes guessResponse = new GuessResPos(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
+                new GuessResPos.User(player.getId(),player.getName()),
+                new GuessResPos.Current(updated.getHiddenWord().length(),guessList,
+                        new GuessResPos.Result(resultStatus, (status == 0 || status == 2)? updated.getHiddenWord() : null)));
         return ResponseEntity.ok(guessResponse);
     }
     //[READ]
@@ -158,7 +234,19 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             return ResponseEntity.notFound().build();
         }
         Game session = sessionOpt.get();
-        BoardRes boardResObj = new BoardRes(playerId, player.getName(), session.getHiddenWord().length(), session.getHiddenWord(), session.getCurrentGuesses());
+        BoardRes boardResObj = new BoardRes(buildLinkForPlayer(BOARD_ENDPOINT_LINKS, player), playerId, player.getName(), session.getHiddenWord().length(), session.getHiddenWord(), session.getCurrentGuesses());
         return ResponseEntity.ok(boardResObj);
+    }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<LeaderBoard> getLeaderboard() {
+        List<Player> players = playerRepo.findAll(Sort.by(Sort.Direction.DESC, "gamesWon"));
+        return ResponseEntity.ok(new LeaderBoard(players));
+    }
+
+    @GetMapping("/")
+    public ResponseEntity<Links> getLinks() {
+        Links all = buildAllLinks();
+        return ResponseEntity.ok(all);
     }
 }
