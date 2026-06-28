@@ -105,7 +105,7 @@ public class ApiClient {
         return response.getBody();
     }
 
-    public Board guess(String playerId, String word) {
+    public Board guess(Integer playerId, String word) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         SessionStore.getInstance().read().ifPresent(headers::setBearerAuth);

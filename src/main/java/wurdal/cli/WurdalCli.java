@@ -12,7 +12,7 @@ public class WurdalCli {
     private final PasswordReader passwordReader;
 
     public WurdalCli() {
-        this(new ApiClient(), new SessionStore(), new PasswordReader());
+        this(new ApiClient(), SessionStore.getInstance(), new PasswordReader());
     }
 
     WurdalCli(ApiClient apiClient, SessionStore sessionStore, PasswordReader passwordReader) {
@@ -120,7 +120,7 @@ public class WurdalCli {
             return 1;
         }
         String guessWord = args[1].trim();
-        Board response = apiClient.guess(session.get(), guessWord);
+        Board response = apiClient.guess(guessWord);
         if (response instanceof BoardResError) {
             return 1;
         }

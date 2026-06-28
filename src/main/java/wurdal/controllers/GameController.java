@@ -15,6 +15,7 @@ import wurdal.structures.api.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 
 @RestController
@@ -207,10 +208,10 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
     }
 
     @PostMapping(value="/guess")
-    public ResponseEntity<Board> guess(@RequestHeader Integer Bearer, @RequestBody GuessReq guessReq) {
+    public ResponseEntity<Board> guess(@RequestHeader String Bearer, @RequestBody GuessReq guessReq) {
         String guessWord = guessReq.guess();
 
-        Optional<Player> play = playerRepo.findFirstByToken(Bearer);
+        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(Bearer));
         if (play.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -345,11 +346,11 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
     }
 
     @GetMapping("/board")
-    public ResponseEntity<Board> board(@RequestHeader Integer Bearer) {
+    public ResponseEntity<Board> board(@RequestHeader String Bearer) {
         if (Bearer == null) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(new BoardResError(buildAllLinks(), new GenError("no authentication token")));
         }
-        Optional<Player> play = playerRepo.findFirstByToken(Bearer);
+        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(Bearer));
         if (play.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -404,6 +405,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
     @GetMapping("/leaderboard")
     public ResponseEntity<LeaderBoard> getLeaderboard() {
         List<Player> players = playerRepo.findAll(Sort.by(Sort.Direction.DESC, "gamesWon"));
+        players.forEach(p -> p.setToken(null));
         return ResponseEntity.ok(new LeaderBoard(players));
     }
 
@@ -476,11 +478,11 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
     }
 
     @GetMapping(value="/new-game")
-    public ResponseEntity<Board> newGame(@RequestHeader Integer Bearer) {
+    public ResponseEntity<Board> newGame(@RequestHeader String Bearer) {
         if(Bearer == null) {
             return ResponseEntity.badRequest().build();
         }
-        Optional<Player> play = playerRepo.findFirstByToken(Bearer);
+        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(Bearer));
         if (play.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -538,17 +540,17 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
 
     @GetMapping(value="/getId/{playerName}")
     public ResponseEntity<JsonNode> getIdByName(@PathVariable String playerName) {
-        Optional<Integer> playerId = playerRepo.findFirstByName(playerName);
+        Optional<Player> player = playerRepo.findFirstByName(playerName);
         ObjectMapper objm = new ObjectMapper();
         ObjectNode out = objm.createObjectNode();
         out.put("id", "-2");
-        playerId.ifPresent(id -> out.put("id", id));
+        player.ifPresent(id -> out.put("id", player.get().getId()));
         return ResponseEntity.ok(out);
     }
 
     @GetMapping(value="/getId")
-    public ResponseEntity<JsonNode> getIdByName(@RequestHeader Integer Bearer) {
-        Optional<Player> player = playerRepo.findFirstByToken(Bearer);
+    public ResponseEntity<JsonNode> getId(@RequestHeader String Bearer) {
+        Optional<Player> player = playerRepo.findFirstByToken(UUID.fromString(Bearer));
         ObjectMapper objm = new ObjectMapper();
         ObjectNode out = objm.createObjectNode();
         out.put("id", "-2");
