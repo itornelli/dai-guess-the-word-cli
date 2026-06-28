@@ -1,6 +1,5 @@
 package wurdal.controllers;
 
-import org.apache.coyote.Response;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -8,6 +7,7 @@ import wurdal.game.GameEngine;
 import wurdal.repository.GameRepository;
 import wurdal.repository.PlayerRepository;
 import wurdal.structures.*;
+import wurdal.structures.api.*;
 
 import java.util.ArrayList;
 import java.util.List;

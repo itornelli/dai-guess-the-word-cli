@@ -8,7 +8,6 @@ import wurdal.persistence.FileBasedPersistence;
 import wurdal.persistence.PersistenceLayer;
 import java.util.Arrays;
 import wurdal.cli.WurdalCli;
-import wurdal.server.WurdalServerApplication;
 
 /**
  * Main entry point for the Wordle CLI application.

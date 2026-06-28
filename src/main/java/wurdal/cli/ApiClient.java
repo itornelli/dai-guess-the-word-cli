@@ -2,17 +2,14 @@ package wurdal.cli;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import wurdal.structures.api.BoardRes;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import wurdal.api.AuthResponse;
-import wurdal.api.BoardResponse;
-import wurdal.api.CredentialsRequest;
-import wurdal.api.ErrorResponse;
-import wurdal.api.GuessRequest;
-import wurdal.api.MessageResponse;
+
 
 public class ApiClient {
     private static final String SESSION_HEADER = "X-Session-Id";
@@ -36,11 +33,11 @@ public class ApiClient {
         return sendJson("POST", "/api/auth/logout", sessionId, null, MessageResponse.class);
     }
 
-    public BoardResponse board(String sessionId) {
+    public BoardRes board(String sessionId) {
         return sendJson("GET", "/api/game/board", sessionId, null, BoardResponse.class);
     }
 
-    public BoardResponse guess(String sessionId, String word) {
+    public BoardRes guess(String sessionId, String word) {
         return sendJson("POST", "/api/game/guess", sessionId, new GuessRequest(word), BoardResponse.class);
     }
 

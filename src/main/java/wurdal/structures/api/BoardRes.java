@@ -1,4 +1,4 @@
-package wurdal.structures;
+package wurdal.structures.api;
 
 import java.util.List;
 

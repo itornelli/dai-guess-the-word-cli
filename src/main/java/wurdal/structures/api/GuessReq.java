@@ -1,4 +1,4 @@
-package wurdal.structures;
+package wurdal.structures.api;
 
 public record GuessReq(String guess) {
 }
