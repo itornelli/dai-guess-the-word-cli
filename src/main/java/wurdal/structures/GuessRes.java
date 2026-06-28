@@ -1,7 +1,0 @@
-package wurdal.structures;
-
-import java.util.List;
-
-public interface GuessRes {
-
-}

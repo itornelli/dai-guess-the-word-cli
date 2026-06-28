@@ -18,6 +18,10 @@ public class Player {
     private Integer gameId = null;
     private Boolean isInGame = false;
 
+    public Player(String name) {
+        this.name = name;
+    }
+
     public Integer getId() {
         return this.id;
     }

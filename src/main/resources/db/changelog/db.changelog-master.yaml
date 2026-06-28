@@ -23,3 +23,7 @@ databaseChangeLog:
       file: classpath:db/changelog/011a-add-player-stats-columns.sql
   - include:
       file: classpath:db/changelog/012a-alter-average-guesses-to-double.sql
+  - include:
+      file: classpath:db/changelog/013a-ensure-player-name-unique.sql
+  - include:
+      file: classpath:db/changelog/014a-add-player-token-uuid.sql

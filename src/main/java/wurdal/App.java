@@ -6,8 +6,17 @@ import wurdal.command.CommandLineParser;
 import wurdal.game.GameEngine;
 import wurdal.persistence.FileBasedPersistence;
 import wurdal.persistence.PersistenceLayer;
+import java.util.Arrays;
+import wurdal.cli.WurdalCli;
 
-@SpringBootApplication
+/**
+ * Main entry point for the Wordle CLI application.
+ * 
+ * Sets up dependency injection:
+ * - PersistenceLayer: File-based storage (can be swapped for DB, JSON, etc.)
+ * - CommandLineParser: CLI command routing
+ * - GameEngine: Core game logic
+ */
 public class App {
 
     public static void main(String[] args) {
