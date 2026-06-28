@@ -176,9 +176,9 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
 
 
-        List<GuessResPos.Guess> guessList = new ArrayList<>();
+        List<GuessResAcc.Guess> guessList = new ArrayList<>();
         for (String guess : updated.getCurrentGuesses()) {
-            List<GuessResPos.LetterResult> letterResults = new ArrayList<>();
+            List<GuessResAcc.LetterResult> letterResults = new ArrayList<>();
             String[] colors = gameEngine.evaluateGuessColors(updated.getHiddenWord(), guess, updated.getHiddenWord().length());
             for(int i = 0; i < guess.length(); i++) {
                 String colorResult = "";
@@ -191,10 +191,10 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
                 else {
                     colorResult = "none";
                 }
-                GuessResPos.LetterResult result = new GuessResPos.LetterResult(guess.charAt(i), colorResult);
+                GuessResAcc.LetterResult result = new GuessResAcc.LetterResult(guess.charAt(i), colorResult);
                 letterResults.add(result);
             }
-            GuessResPos.Guess guessObj = new GuessResPos.Guess(letterResults);
+            GuessResAcc.Guess guessObj = new GuessResAcc.Guess(letterResults);
             guessList.add(guessObj);
         }
 
@@ -211,10 +211,10 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
 
         gameRepo.save(updated);
-        GuessRes guessResponse = new GuessResPos(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
-                new GuessResPos.User(player.getId(),player.getName()),
-                new GuessResPos.Current(updated.getHiddenWord().length(),guessList,
-                        new GuessResPos.Result(resultStatus, (status == 0 || status == 2)? updated.getHiddenWord() : null)));
+        GuessRes guessResponse = new GuessResAcc(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
+                new GuessResAcc.User(player.getId(),player.getName()),
+                new GuessResAcc.Current(updated.getHiddenWord().length(),guessList,
+                        new GuessResAcc.Result(resultStatus, (status == 0 || status == 2)? updated.getHiddenWord() : null)));
         return ResponseEntity.ok(guessResponse);
     }
     //[READ]

@@ -2,9 +2,9 @@ package wurdal.cli;
 
 import java.util.Locale;
 import java.util.Optional;
-import wurdal.api.AuthResponse;
-import wurdal.api.BoardResponse;
-import wurdal.api.MessageResponse;
+import wurdal.structures.api.AuthResponse;
+import wurdal.structures.api.BoardRes;
+import wurdal.structures.api.MessageResponse;
 import wurdal.cli.ApiClient.ApiException;
 
 public class WurdalCli {
@@ -91,7 +91,7 @@ public class WurdalCli {
             System.out.println("Please login to continue");
             return 1;
         }
-        BoardResponse response = apiClient.board(session.get());
+        BoardRes response = apiClient.board(session.get());
         printBoardResponse(response, response.playerName());
         return 0;
     }
@@ -107,7 +107,7 @@ public class WurdalCli {
             return 1;
         }
         String guessWord = args[1].trim();
-        BoardResponse response = apiClient.guess(session.get(), guessWord);
+        BoardRes response = apiClient.guess(session.get(), guessWord);
         printBoardResponse(response, response.playerName());
         return 0;
     }
@@ -117,7 +117,7 @@ public class WurdalCli {
         return 1;
     }
 
-    private void printBoardResponse(BoardResponse response, String displayName) {
+    private void printBoardResponse(BoardRes response, String displayName) {
         System.out.println("May the odds be in your favor " + displayName + "!");
         BoardRenderer.print(response);
     }

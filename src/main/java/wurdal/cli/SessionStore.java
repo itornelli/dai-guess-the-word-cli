@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+
+//Could save this in a system register instead
 public class SessionStore {
     private final Path sessionFile;
 

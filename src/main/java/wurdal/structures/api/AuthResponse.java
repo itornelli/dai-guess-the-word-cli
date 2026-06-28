@@ -1,6 +1,4 @@
-package wurdal.api;
-
-import wurdal.structures.api.BoardRes;
+package wurdal.structures.api;
 
 public record AuthResponse(String message, String sessionId, BoardRes board) {
 }

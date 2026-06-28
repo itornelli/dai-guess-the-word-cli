@@ -1,9 +1,10 @@
 package wurdal.cli;
 
+import wurdal.structures.api.BoardRes;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
-import wurdal.api.BoardResponse;
 
 public final class BoardRenderer {
     private static final int WORD_LENGTH = 5;
@@ -19,7 +20,7 @@ public final class BoardRenderer {
     private BoardRenderer() {
     }
 
-    public static void print(BoardResponse board) {
+    public static void print(BoardRes board) {
         String topBottomRow = buildRow(WORD_LENGTH, CELL_BORDER);
         List<String> guessList = board.guesses() == null ? List.of() : new ArrayList<>(board.guesses());
 

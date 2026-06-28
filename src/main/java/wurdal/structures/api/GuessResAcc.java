@@ -2,7 +2,7 @@ package wurdal.structures.api;
 
 import java.util.List;
 
-public record GuessResPos(Links links, User user, Current current) implements GuessRes {
+public record GuessResAcc(Links links, User user, Current current) implements GuessRes {
     public record User(Integer id, String name) {}
 
     public record Current(int length, List<Guess> guesses, Result result) {}

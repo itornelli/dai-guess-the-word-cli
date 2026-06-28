@@ -2,7 +2,12 @@ package wurdal.cli;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import wurdal.structures.api.AuthResponse;
+import wurdal.structures.api.CredentialsRequest;
+import wurdal.structures.api.ErrorResponse;
+import wurdal.structures.api.MessageResponse;
 import wurdal.structures.api.BoardRes;
+import wurdal.structures.api.GuessReq;
 
 import java.io.IOException;
 import java.net.URI;
@@ -22,23 +27,23 @@ public class ApiClient {
     }
 
     public AuthResponse register(String username, String password) {
-        return sendJson("POST", "/api/auth/register", null, new CredentialsRequest(username, password), AuthResponse.class);
+        return sendJson("POST", "/register", null, new CredentialsRequest(username, password), AuthResponse.class);
     }
 
     public AuthResponse login(String username, String password) {
-        return sendJson("POST", "/api/auth/login", null, new CredentialsRequest(username, password), AuthResponse.class);
+        return sendJson("POST", "/login", null, new CredentialsRequest(username, password), AuthResponse.class);
     }
 
     public MessageResponse logout(String sessionId) {
-        return sendJson("POST", "/api/auth/logout", sessionId, null, MessageResponse.class);
+        return sendJson("POST", "/logout", sessionId, null, MessageResponse.class);
     }
 
     public BoardRes board(String sessionId) {
-        return sendJson("GET", "/api/game/board", sessionId, null, BoardResponse.class);
+        return sendJson("GET", "/board", sessionId, null, BoardRes.class);
     }
 
     public BoardRes guess(String sessionId, String word) {
-        return sendJson("POST", "/api/game/guess", sessionId, new GuessRequest(word), BoardResponse.class);
+        return sendJson("POST", "/guess", sessionId, new GuessReq(word), BoardRes.class);
     }
 
     private <T> T sendJson(String method, String path, String sessionId, Object requestBody, Class<T> responseType) {
