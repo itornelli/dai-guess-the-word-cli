@@ -105,13 +105,27 @@ public class ApiClient {
         return response.getBody();
     }
 
-    public Board guess(String playerId, String word) {
+    public Board guess(Integer playerId, String word) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         SessionStore.getInstance().read().ifPresent(headers::setBearerAuth);
         HttpEntity<GuessReq> entity = new HttpEntity<>(new GuessReq(word), headers);
         ResponseEntity<Board> response = restTemplate.exchange(
                 baseUrl + "/" + playerId + "/guess",
+                HttpMethod.POST,
+                entity,
+                Board.class
+        );
+        return response.getBody();
+    }
+
+    public Board guess(String word) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        SessionStore.getInstance().read().ifPresent(headers::setBearerAuth);
+        HttpEntity<GuessReq> entity = new HttpEntity<>(new GuessReq(word), headers);
+        ResponseEntity<Board> response = restTemplate.exchange(
+                baseUrl  + "/guess",
                 HttpMethod.POST,
                 entity,
                 Board.class

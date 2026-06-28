@@ -2,6 +2,8 @@ package wurdal.structures;
 
 import jakarta.persistence.*;
 
+import java.util.UUID;
+
 
 @Entity
 @Table(name = "Players")
@@ -17,9 +19,13 @@ public class Player {
     private Double averageGuesses = 0.0;
     private Integer gameId = null;
     private Boolean isInGame = false;
+    private UUID token;
 
     public Player(String name) {
         this.name = name;
+    }
+    public Player() {
+        this.name = null;
     }
 
     public Integer getId() {
@@ -33,7 +39,9 @@ public class Player {
     public Integer getGameId() {return this.gameId;}
     public int gameId() {return this.gameId;}
     public boolean isInGame() {return this.isInGame;}
+    public UUID getToken() { return token; }
 
+    public void setToken(UUID token) { this.token = token; }
     public void setName(String name) {this.name = name;}
     public void setGamesWon(int gamesWon) {this.gamesWon = gamesWon;}
     public void setGamesLost(int gamesLost) {this.gamesLost = gamesLost;}

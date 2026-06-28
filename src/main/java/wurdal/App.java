@@ -17,13 +17,14 @@ import wurdal.cli.WurdalCli;
  * - CommandLineParser: CLI command routing
  * - GameEngine: Core game logic
  */
+@SpringBootApplication
 public class App {
 
     public static void main(String[] args) {
         if (args.length == 0 || hasSpringArgs(args)) {
             SpringApplication.run(App.class, args);
-
-        } else {
+        }
+      else {
             runCLI(args);
         }
     }

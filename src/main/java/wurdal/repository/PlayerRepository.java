@@ -7,9 +7,10 @@ import org.springframework.stereotype.Repository;
 import wurdal.structures.Player;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface PlayerRepository extends JpaRepository<Player, Integer> {
-    Optional<Integer> findFirstByName(String name);
-    Optional<Player> findFirstByToken(Integer token);
+    Optional<Player> findFirstByName(String name);
+    Optional<Player> findFirstByToken(UUID token);
 }
