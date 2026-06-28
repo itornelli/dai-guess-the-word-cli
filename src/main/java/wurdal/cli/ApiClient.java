@@ -119,6 +119,20 @@ public class ApiClient {
         return response.getBody();
     }
 
+    public Board guess(String word) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        SessionStore.getInstance().read().ifPresent(headers::setBearerAuth);
+        HttpEntity<GuessReq> entity = new HttpEntity<>(new GuessReq(word), headers);
+        ResponseEntity<Board> response = restTemplate.exchange(
+                baseUrl  + "/guess",
+                HttpMethod.POST,
+                entity,
+                Board.class
+        );
+        return response.getBody();
+    }
+
     public LeaderBoard leaderboard() {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
