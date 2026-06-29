@@ -51,6 +51,10 @@ public final class BoardRenderer {
                 System.out.println();
             }
         }
+
+        if (board.currentGuesses().guesses().size() >= 6) {
+            System.out.println("Too bad, the word was " + board.currentGuesses().result().word());
+        }
     }
 
     private static String buildRow(int wordLength, String cellPattern) {

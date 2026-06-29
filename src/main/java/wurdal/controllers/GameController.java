@@ -227,7 +227,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         Board guessResponse = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(updated.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus, (status == 0 || status == 2)? updated.getHiddenWord() : null)));
+                        new BoardRes.Result(resultStatus, updated.getHiddenWord())));
         return ResponseEntity.ok(guessResponse);
     }
 
@@ -308,7 +308,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         Board guessResponse = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(updated.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus, (status == 0 || status == 2)? updated.getHiddenWord() : null)));
+                        new BoardRes.Result(resultStatus,updated.getHiddenWord())));
         return ResponseEntity.ok(guessResponse);
     }
     //[READ]
@@ -366,7 +366,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         Board boardResObj = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(session.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus, (session.getStatus() == 0 || session.getStatus() == 2)? session.getHiddenWord() : null)));
+                        new BoardRes.Result(resultStatus, session.getHiddenWord())));
         return ResponseEntity.ok(boardResObj);
     }
 
@@ -423,7 +423,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         Board boardResObj = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(session.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus, (session.getStatus() == 0 || session.getStatus() == 2)? session.getHiddenWord() : null)));
+                        new BoardRes.Result(resultStatus, session.getHiddenWord())));
         return ResponseEntity.ok(boardResObj);
     }
 
@@ -498,7 +498,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         Board boardResObj = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(saved.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus, (saved.getStatus() == 0 || saved.getStatus() == 2)? saved.getHiddenWord() : null)));
+                        new BoardRes.Result(resultStatus,saved.getHiddenWord())));
         return ResponseEntity.ok(boardResObj);
     }
 
@@ -560,7 +560,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         Board boardResObj = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(saved.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus, (saved.getStatus() == 0 || saved.getStatus() == 2)? saved.getHiddenWord() : null)));
+                        new BoardRes.Result(resultStatus, saved.getHiddenWord())));
         return ResponseEntity.ok(boardResObj);
     }
 

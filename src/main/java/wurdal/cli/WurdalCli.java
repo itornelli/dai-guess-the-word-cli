@@ -89,9 +89,9 @@ public class WurdalCli {
             System.out.println("Please login to continue");
             return 1;
         }
-        MessageResponse response = apiClient.logout(session.get());
+//        MessageResponse response = apiClient.logout(session.get());
         sessionStore.clear();
-        System.out.println(response.message());
+//        System.out.println(response.message());
         return 0;
     }
 
