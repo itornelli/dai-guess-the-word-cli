@@ -103,7 +103,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         String name = req.username();
         Optional<Player> playerOp = playerRepo.findFirstByName(name);
         if (playerOp.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(new AuthResponse("error: player does not exist", null, null));
         }
         Player player = playerOp.get();
         return ResponseEntity.ok(new AuthResponse("message", player.getToken().toString(), null));
@@ -185,9 +185,12 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             if (guessWord.equals(updated.getHiddenWord())) {
                 updated.setStatus(0);
                 player.setGamesWon(player.getGamesWon() + 1);
+                player.setAverageGuesses(updated.getCurrentGuesses().size());
             }
             else if (updated.getCurrentGuesses().size() >= 6) {
                 updated.setStatus(2);
+                player.setGamesLost(player.getGamesLost() + 1);
+                player.setAverageGuesses(updated.getCurrentGuesses().size());
             }
         }
 
@@ -227,6 +230,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
 
         gameRepo.save(updated);
+        playerRepo.save(player);
         Board guessResponse = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(updated.getHiddenWord().length(),guessList,
@@ -266,9 +270,12 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             if (guessWord.equals(updated.getHiddenWord())) {
                 updated.setStatus(0);
                 player.setGamesWon(player.getGamesWon() + 1);
+                player.setAverageGuesses(updated.getCurrentGuesses().size());
             }
             else if (updated.getCurrentGuesses().size() >= 6) {
                 updated.setStatus(2);
+                player.setGamesLost(player.getGamesLost() + 1);
+                player.setAverageGuesses(updated.getCurrentGuesses().size());
             }
         }
 
@@ -308,6 +315,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
 
         gameRepo.save(updated);
+        playerRepo.save(player);
         Board guessResponse = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(updated.getHiddenWord().length(),guessList,
