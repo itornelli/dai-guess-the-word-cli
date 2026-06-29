@@ -1,4 +1,4 @@
 package wurdal.structures.api;
 
-public record RegisterReq(String name) implements Register {
+public record RegisterReq(String name) implements ApiRequest, Register {
 }

@@ -91,7 +91,7 @@ public class ApiClient {
         return response.getBody();
     }
 
-    public Board board(String sessionId) {
+    public Board board() {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         SessionStore.getInstance().read().ifPresent(headers::setBearerAuth);

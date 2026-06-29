@@ -3,7 +3,9 @@ package wurdal.controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import wurdal.game.GameEngine;
@@ -93,21 +95,43 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         return new Links(registerLink, loginLink, logoutLink, leaderboardLink, guessLink, boardLink);
     }
 
+    @PostMapping("/session")
+    public ResponseEntity<AuthResponse> login(@RequestBody CredentialsRequest req) {
+        String name = req.username();
+        Optional<Player> playerOp = playerRepo.findFirstByName(name);
+        if (playerOp.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Player player = playerOp.get();
+        return ResponseEntity.ok(new AuthResponse("message", player.getToken().toString(), null));
+    }
+
     //[CREATE]
     @PostMapping(value="/player")
     public ResponseEntity<ApiResponse> register(@RequestBody RegisterReq req) {
-        Player player = new Player(req.name());
-        Player saved = playerRepo.save(player);
+        try {
+            Player player = new Player(req.name());
+            Player saved = playerRepo.saveAndFlush(player); // flush to surface constraint violations here
 
-        if (saved.isInGame()) {
-            //TODO(This should have some type of header that will say the player is in a game)
-            return ResponseEntity.badRequest().body(new GenError("name must be ..."));
+            Optional<Player> opWithToken = playerRepo.findById(saved.getId());
+
+            if (opWithToken.isEmpty()) {
+                return ResponseEntity.ok(new GenError("Player generation error"));
+            }
+            Player withToken = opWithToken.get();
+
+            if (withToken.getIsInGame() == null|| !withToken.getIsInGame()) {
+                gameRepo.save(new Game(gameEngine.chooseRandomWord(withToken.getName()), new ArrayList<>(), withToken.getId()));
+            }
+
+            String token = withToken.getToken() != null ? withToken.getToken().toString() : null;
+            return ResponseEntity.ok(new RegisterRes(saved.getId(), token, saved.getName()));
+
+        } catch (DataIntegrityViolationException e) {
+            // duplicate player name (unique constraint)
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new GenError("Player name already exists"));
         }
-        Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), saved.getId());
-        Game savedGame = gameRepo.save(newGame);
-        //null placeholder for sessionId until login is complete
-        return ResponseEntity.ok(new RegisterRes(player.getId(), null, player.getName()));
-//        return ResponseEntity.ok(new BoardRes(buildLinkForPlayer(REGISTER_LINKS, player), player.getId(), player.getName(), savedGame.getHiddenWord().length(), savedGame.getHiddenWord(), savedGame.getCurrentGuesses()));
     }
 
 
@@ -157,7 +181,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             updated.addGuessWord(guessWord);
             if (guessWord.equals(updated.getHiddenWord())) {
                 updated.setStatus(0);
-                player.setGamesWon(player.gamesWon() + 1);
+                player.setGamesWon(player.getGamesWon() + 1);
             }
             else if (updated.getCurrentGuesses().size() >= 6) {
                 updated.setStatus(2);
@@ -208,10 +232,11 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
     }
 
     @PostMapping(value="/guess")
-    public ResponseEntity<Board> guess(@RequestHeader String Bearer, @RequestBody GuessReq guessReq) {
+    public ResponseEntity<Board> guess(@RequestHeader("Authorization") String authorization, @RequestBody GuessReq guessReq) {
         String guessWord = guessReq.guess();
+        String token = authorization.replaceFirst("(?i)^Bearer\\s+", "");
 
-        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(Bearer));
+        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(token));
         if (play.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -237,7 +262,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             updated.addGuessWord(guessWord);
             if (guessWord.equals(updated.getHiddenWord())) {
                 updated.setStatus(0);
-                player.setGamesWon(player.gamesWon() + 1);
+                player.setGamesWon(player.getGamesWon() + 1);
             }
             else if (updated.getCurrentGuesses().size() >= 6) {
                 updated.setStatus(2);
@@ -346,11 +371,11 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
     }
 
     @GetMapping("/board")
-    public ResponseEntity<Board> board(@RequestHeader String Bearer) {
-        if (Bearer == null) {
-            return ResponseEntity.badRequest().body(new BoardResError(buildAllLinks(), new GenError("no authentication token")));
-        }
-        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(Bearer));
+    public ResponseEntity<Board> board(@RequestHeader("Authorization") String authorization) {
+        System.out.println(authorization);
+        String token = authorization.replaceFirst("(?i)^Bearer\\s+", "");
+
+        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(token));
         if (play.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -426,7 +451,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             return ResponseEntity.notFound().build();
         }
         Player player = play.get();
-        if (player.isInGame()) {
+        if (player.getIsInGame()) {
             //start new game (maybe change this idk)
             //uses 007a-create-player-in-game-trigger
         }
@@ -478,16 +503,17 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
     }
 
     @GetMapping(value="/new-game")
-    public ResponseEntity<Board> newGame(@RequestHeader String Bearer) {
-        if(Bearer == null) {
+    public ResponseEntity<Board> newGame(@RequestHeader("Authorization") String authorization) {
+        if(authorization == null) {
             return ResponseEntity.badRequest().build();
         }
-        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(Bearer));
+        String token = authorization.replaceFirst("(?i)^Bearer\\s+", "");
+        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(token));
         if (play.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Player player = play.get();
-        if (player.isInGame()) {
+        if (player.getIsInGame()) {
             //start new game (maybe change this idk)
             //uses 007a-create-player-in-game-trigger
         }
@@ -549,8 +575,9 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
     }
 
     @GetMapping(value="/getId")
-    public ResponseEntity<JsonNode> getId(@RequestHeader String Bearer) {
-        Optional<Player> player = playerRepo.findFirstByToken(UUID.fromString(Bearer));
+    public ResponseEntity<JsonNode> getId(@RequestHeader("Authorization") String authorization) {
+        String token = authorization.replaceFirst("(?i)^Bearer\\s+", "");
+        Optional<Player> player = playerRepo.findFirstByToken(UUID.fromString(token));
         ObjectMapper objm = new ObjectMapper();
         ObjectNode out = objm.createObjectNode();
         out.put("id", "-2");
