@@ -3,6 +3,8 @@ package wurdal.controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,7 @@ import java.util.UUID;
 
 @RestController
 public record GameController(PlayerRepository playerRepo, GameRepository gameRepo, GameEngine gameEngine) {
+    static final Logger logger = LoggerFactory.getLogger(GameController.class);
     static final String REGISTER_ENDPOINT = "/player";
     static final String NEW_GAME_ENDPOINT = "/new-game/{playerId}";
     static final String GUESS_ENDPOINT = "/{playerId}/guess";
