@@ -1,5 +1,58 @@
 #!/bin/bash
-# Wrapper script to run wurdal from the project root
-# Usage: ./wurdal <command> [args...]
+# Wrapper script for the single App entry point (wurdal.App).
+# Usage:
+#   ./wurdal --install          # installs a PATH symlink
+#   ./wurdal --rebuild          # force recompilation
+#   ./wurdal server             # starts Spring server
+#   ./wurdal <command> [args...] # runs CLI (register/login/board/guess/...)
 
-exec "$(dirname "$0")/build/install/wurdal/bin/wurdal" "$@"
+set -euo pipefail
+
+# Resolve to the actual wurdal script (handles symlinks and PATH invocations)
+SCRIPT_PATH="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/wurdal"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+DIST_BIN="$SCRIPT_DIR/build/install/wurdal/bin/wurdal"
+
+install_to_path() {
+  local install_dir="${WURDAL_INSTALL_DIR:-/usr/local/bin}"
+
+  if [ ! -w "$install_dir" ]; then
+	install_dir="$HOME/.local/bin"
+	mkdir -p "$install_dir"
+  fi
+
+  ln -sf "$SCRIPT_PATH" "$install_dir/wurdal"
+  echo "Installed: $install_dir/wurdal"
+
+  case ":$PATH:" in
+	*":$install_dir:"*) ;;
+	*) echo "Add $install_dir to PATH to run 'wurdal' globally." ;;
+  esac
+}
+
+if [ "${1:-}" = "--install" ]; then
+  install_to_path
+  exit 0
+fi
+
+if [ "${1:-}" = "--rebuild" ]; then
+  "$SCRIPT_DIR/gradlew" installDist
+  exit 0
+fi
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  cat <<'EOF'
+Usage:
+  wurdal server
+  wurdal <command> [args...]
+
+Commands are forwarded to the single App entry point.
+EOF
+  exit 0
+fi
+
+if [ ! -x "$DIST_BIN" ]; then
+  "$SCRIPT_DIR/gradlew" --quiet installDist
+fi
+
+exec "$DIST_BIN" "$@"

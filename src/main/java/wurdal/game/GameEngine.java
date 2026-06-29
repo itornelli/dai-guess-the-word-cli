@@ -9,6 +9,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Component;
 import wurdal.command.CommandLineParser;
 import wurdal.leaderboard.LeaderboardEntry;
 import wurdal.persistence.PersistenceLayer;
@@ -25,6 +27,7 @@ import wurdal.persistence.PersistenceLayer;
  * This class uses dependency injection for the persistence layer,
  * allowing swapping between file-based, JSON, database, etc.
  */
+@Component
 public class GameEngine {
 
     public static final int DEFAULT_WORD_LENGTH = 5;

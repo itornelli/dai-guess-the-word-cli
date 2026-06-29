@@ -35,11 +35,11 @@ public class ApiClient {
         return response.getBody();
     }
 
-    public AuthResponse login(String username, String password) {
+    public AuthResponse login(String username) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         SessionStore.getInstance().read().ifPresent(headers::setBearerAuth);
-        HttpEntity<CredentialsRequest> entity = new HttpEntity<>(new CredentialsRequest(username, password), headers);
+        HttpEntity<CredentialsRequest> entity = new HttpEntity<>(new CredentialsRequest(username), headers);
         ResponseEntity<AuthResponse> response = restTemplate.exchange(
                 baseUrl + "/session",
                 HttpMethod.POST,
