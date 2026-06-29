@@ -63,13 +63,13 @@ public class ApiClient {
         return response.getBody();
     }
 
-    public BoardRes newGame(String playerId) {
+    public BoardRes newGame() {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         SessionStore.getInstance().read().ifPresent(headers::setBearerAuth);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         ResponseEntity<BoardRes> response = restTemplate.exchange(
-                baseUrl + "/new-game/" + playerId,
+                baseUrl + "/new-game",
                 HttpMethod.POST,
                 entity,
                 BoardRes.class
