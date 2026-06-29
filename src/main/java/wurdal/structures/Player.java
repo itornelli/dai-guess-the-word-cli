@@ -19,6 +19,7 @@ public class Player {
     private Double averageGuesses = 0.0;
     private Integer gameId = null;
     private Boolean isInGame = false;
+    @Column(insertable = false, updatable = false)
     private UUID token;
 
     public Player(String name) {
@@ -33,12 +34,10 @@ public class Player {
     }
     public String getName() {return this.name;}
     public int getGamesWon() {return this.gamesWon;}
-    public int gamesWon() {return this.gamesWon;}
     public int getGamesLost() {return this.gamesLost;}
     public double getAverageGuesses() {return this.averageGuesses;}
     public Integer getGameId() {return this.gameId;}
-    public int gameId() {return this.gameId;}
-    public boolean isInGame() {return this.isInGame;}
+    public Boolean getIsInGame() {return this.isInGame;}
     public UUID getToken() { return token; }
 
     public void setToken(UUID token) { this.token = token; }

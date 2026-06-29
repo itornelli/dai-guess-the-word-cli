@@ -42,7 +42,7 @@ public class WurdalCli {
             return e.statusCode() == 401 ? 1 : 2;
         } catch (RuntimeException e) {
             System.err.println(e.getMessage());
-            return 3;
+             return 3;
         }
     }
 
@@ -52,9 +52,12 @@ public class WurdalCli {
             return 1;
         }
         String username = args[1].trim();
-        String password = passwordReader.readPassword(username);
+        //String password = passwordReader.readPassword(username);
         RegisterRes response = apiClient.register(username);
-        sessionStore.write(response.sessionId());
+        if (response.sessionId() != null) {
+            sessionStore.write(response.sessionId());
+        }
+        System.out.println(response);
         //printBoardResponse(response.board(), response.board().playerName());
         return 0;
     }
@@ -67,15 +70,20 @@ public class WurdalCli {
         String username = args[1].trim();
         String password = passwordReader.readPassword(username);
         AuthResponse response = apiClient.login(username, password);
-        sessionStore.write(response.sessionId());
+        SessionStore.getInstance().write(response.sessionId());
         //Maybe sessionId should be renamed to Token
         //wasn't the playerId here?
-        Board boardResponse = apiClient.board(response.sessionId());
+        Board boardResponse = apiClient.board();
         if (boardResponse instanceof BoardResError) {
             return 1;
         }
         BoardRes res = (BoardRes) boardResponse;
-        printBoardResponse(res, res.user().name());
+        if (res.user() != null) {
+            printBoardResponse(res, res.user().name());
+        }
+        else {
+            throw new RuntimeException("[WurdalCli.handleLogin]res.user() is null");
+        }
         return 0;
     }
 
@@ -97,7 +105,7 @@ public class WurdalCli {
             System.out.println("Please login to continue");
             return 1;
         }
-        Board response = apiClient.board(session.get());
+        Board response = apiClient.board();
         if (response instanceof BoardResError) {
             return 1;
         }

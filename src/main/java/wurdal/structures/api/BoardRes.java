@@ -6,7 +6,7 @@ public record BoardRes(
         Links links,
         User user,
         Current currentGuesses
-) implements Board {
+) implements Board, ApiResponse {
     public record User(Integer id, String name) {}
 
     public record Current(int length, List<Guess> guesses, Result result) {}

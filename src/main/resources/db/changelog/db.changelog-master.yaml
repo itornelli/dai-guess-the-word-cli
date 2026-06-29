@@ -27,3 +27,13 @@ databaseChangeLog:
       file: classpath:db/changelog/013a-ensure-player-name-unique.sql
   - include:
       file: classpath:db/changelog/014a-add-player-token-uuid.sql
+  - include:
+      file: classpath:db/changelog/015a-ensure-player-token-unique.sql
+  - include:
+      file: classpath:db/changelog/016a-delete-all-entries.sql
+  - include:
+      file: classpath:db/changelog/017a-add-players-game-id-fk.sql
+  - include:
+      file: classpath:db/changelog/018a-fix-player-in-game-trigger.sql
+  - include:
+      file: classpath:db/changelog/019a-delete-all-entries.sql
