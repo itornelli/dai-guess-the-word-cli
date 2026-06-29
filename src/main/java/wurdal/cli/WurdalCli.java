@@ -3,6 +3,7 @@ package wurdal.cli;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.springframework.web.client.RestClientException;
 import wurdal.structures.Player;
 import wurdal.structures.api.*;
 import wurdal.cli.ApiClient.ApiException;
@@ -51,11 +52,19 @@ public class WurdalCli {
         return 0;
     }
     private int handleLeaderboard() {
-        LeaderBoard leaderBoard = apiClient.leaderboard();
-        leaderBoard.players().forEach(p -> {
-           System.out.println(p.getName() + " with " + p.getGamesWon() + " wins, " + p.getGamesLost() + " losses, average " + p.getAverageGuesses() + " guesses");
-        });
-        return 0;
+        try {
+            LeaderBoard leaderBoard = apiClient.leaderboard();
+            leaderBoard.players().forEach(p ->
+                    System.out.println(
+                            p.getName() + " with " + p.getGamesWon() + " wins, " +
+                                    p.getGamesLost() + " losses, average " + p.getAverageGuesses() + " guesses"
+                    )
+            );
+            return 0;
+        } catch (RestClientException e) {
+            System.out.println("Looks like the wurdal servers are taking a loss... try again later!");
+            return 2;
+        }
     }
 
     private int handleRegister(String[] args) {
