@@ -54,6 +54,11 @@ public class WurdalCli {
     private int handleLeaderboard() {
         try {
             LeaderBoard leaderBoard = apiClient.leaderboard();
+            if (leaderBoard.players() == null || leaderBoard.players().isEmpty()) {
+                System.out.println("No players on the leaderboard yet. Be the first to register!");
+                return 0;
+            }
+
             leaderBoard.players().forEach(p ->
                     System.out.println(
                             p.getName() + " with " + p.getGamesWon() + " wins, " +
