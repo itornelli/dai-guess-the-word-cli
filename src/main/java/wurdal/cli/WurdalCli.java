@@ -36,7 +36,6 @@ public class WurdalCli {
                 case "board" -> handleBoard();
                 case "guess" -> handleGuess(args);
                 case "leaderboard" -> handleLeaderboard();
-                case "new-game" -> handleNewGame();
                 default -> unknownCommand(command);
             };
         } catch (ApiException e) {
@@ -48,9 +47,6 @@ public class WurdalCli {
         }
     }
 
-    private int handleNewGame() {
-        return 0;
-    }
     private int handleLeaderboard() {
         try {
             LeaderBoard leaderBoard = apiClient.leaderboard();

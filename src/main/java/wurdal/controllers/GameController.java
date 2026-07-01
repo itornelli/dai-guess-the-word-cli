@@ -30,7 +30,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
     static final String GUESS_ENDPOINT = "/{playerId}/guess";
     static final String BOARD_ENDPOINT = "/{playerId}/board";
     static final String LOGIN_ENDPOINT = "/sessions";
-    static final String LOGOUT_ENDPOINT = "";
+    static final String LOGOUT_ENDPOINT = ""; //not using one rn
     static final String LEADERBOARD_ENDPOINT = "/leaderboard";
 
     static final String[] GUESS_ENDPOINT_LINKS = {GUESS_ENDPOINT, BOARD_ENDPOINT};
@@ -63,6 +63,14 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
                     String href = BOARD_ENDPOINT.substring(0, BOARD_ENDPOINT.indexOf("{")) + player.getId() + BOARD_ENDPOINT.substring(BOARD_ENDPOINT.indexOf("}")+1, BOARD_ENDPOINT.length());
                     boardLink = new Links.Board(href);
                 }
+                case LOGIN_ENDPOINT -> {
+                    String href = LOGIN_ENDPOINT.substring(0, LOGIN_ENDPOINT.indexOf("{")) + player.getId() + LOGIN_ENDPOINT.substring(LOGIN_ENDPOINT.indexOf("}")+1, LOGIN_ENDPOINT.length());
+                    loginLink = new Links.Login(href);
+                }
+                case LEADERBOARD_ENDPOINT -> {
+                    String href = LEADERBOARD_ENDPOINT;
+                    leaderboardLink = new Links.Leaderboard(href);
+                }
             }
         }
 
@@ -92,6 +100,14 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
                     String href = BOARD_ENDPOINT;
                     boardLink = new Links.Board(href);
                 }
+                case LOGIN_ENDPOINT -> {
+                    String href = LOGIN_ENDPOINT;
+                    loginLink = new Links.Login(href);
+                }
+                case LEADERBOARD_ENDPOINT -> {
+                    String href = LEADERBOARD_ENDPOINT;
+                    leaderboardLink = new Links.Leaderboard(href);
+                }
             }
         }
 
@@ -103,7 +119,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         String name = req.username();
         Optional<Player> playerOp = playerRepo.findFirstByName(name);
         if (playerOp.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(new AuthResponse("error: player does not exist", null, null));
         }
         Player player = playerOp.get();
         return ResponseEntity.ok(new AuthResponse("message", player.getToken().toString(), null));
@@ -185,9 +201,12 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             if (guessWord.equals(updated.getHiddenWord())) {
                 updated.setStatus(0);
                 player.setGamesWon(player.getGamesWon() + 1);
+                player.setAverageGuesses(updated.getCurrentGuesses().size());
             }
             else if (updated.getCurrentGuesses().size() >= 6) {
                 updated.setStatus(2);
+                player.setGamesLost(player.getGamesLost() + 1);
+                player.setAverageGuesses(updated.getCurrentGuesses().size());
             }
         }
 
@@ -227,6 +246,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
 
         gameRepo.save(updated);
+        playerRepo.save(player);
         Board guessResponse = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(updated.getHiddenWord().length(),guessList,
@@ -266,9 +286,12 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             if (guessWord.equals(updated.getHiddenWord())) {
                 updated.setStatus(0);
                 player.setGamesWon(player.getGamesWon() + 1);
+                player.setAverageGuesses(updated.getCurrentGuesses().size());
             }
             else if (updated.getCurrentGuesses().size() >= 6) {
                 updated.setStatus(2);
+                player.setGamesLost(player.getGamesLost() + 1);
+                player.setAverageGuesses(updated.getCurrentGuesses().size());
             }
         }
 
@@ -308,6 +331,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         }
 
         gameRepo.save(updated);
+        playerRepo.save(player);
         Board guessResponse = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(updated.getHiddenWord().length(),guessList,
