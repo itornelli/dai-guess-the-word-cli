@@ -24,11 +24,16 @@ public final class BoardRenderer {
         int wordLength = board.currentGuesses().length();
         String topBottomRow = buildRow(wordLength, CELL_BORDER);
         List<String> guessList = new ArrayList<>();
+        if (board.currentGuesses() == null || board.currentGuesses().result() == null || board.currentGuesses().result().word() == null) {
+            System.out.println("bad board response");
+        }
+
         for (BoardRes.Guess guess : board.currentGuesses().guesses()) {
             String word = guess.letters().stream().map(l -> String.valueOf(l.letter())).collect(Collectors.joining());
             guessList.add(word);
         }
 
+        String word = board.currentGuesses().result().word();
         for (int row = 0; row < BOARD_ROWS; row++) {
             System.out.println(ANSI_BLUE + topBottomRow + ANSI_RESET);
             if (row < guessList.size()) {
