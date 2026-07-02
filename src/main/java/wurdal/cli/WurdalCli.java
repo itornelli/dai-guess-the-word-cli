@@ -2,6 +2,7 @@ package wurdal.cli;
 
 import java.util.Locale;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.springframework.web.client.RestClientException;
 import wurdal.structures.Player;
@@ -11,6 +12,8 @@ import wurdal.cli.ApiClient.ApiException;
 public class WurdalCli {
     private final ApiClient apiClient;
     private final SessionStore sessionStore;
+
+    private static final Pattern PLAYER_NAME_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+$");
 
     public WurdalCli() {
         this(new ApiClient(), SessionStore.getInstance());
@@ -68,18 +71,44 @@ public class WurdalCli {
         }
     }
 
+    private boolean ensureServerUp() {
+        try {
+            apiClient.links();
+            return true;
+        } catch (RestClientException e) {
+            System.err.println("Looks like the wurdal servers are taking a loss... try again later!");
+            return false;
+        }
+    }
+
     private int handleRegister(String[] args) {
+        if (!ensureServerUp()) {
+            return 1;
+        }
+
         if (args.length < 2) {
+            System.err.println("Name cannot be empty.");
             System.err.println("usage: wurdal register <name>");
             return 1;
         }
+
         String username = args[1].trim();
+
+        if (!PLAYER_NAME_PATTERN.matcher(username).matches()) {
+            System.err.println("Invalid player name. Try a different name.");
+            return 1;
+        }
+
+        if (apiClient.getId(username) != null) {
+            System.err.println("Player name already exists.");
+            return 1;
+        }
+
         RegisterRes response = apiClient.register(username);
         if (response.sessionId() != null) {
             sessionStore.write(response.sessionId());
         }
-        System.out.println(response);
-        //printBoardResponse(response.board(), response.board().playerName());
+        System.out.println("May the odds be in your favor " + username +"!");
         return 0;
     }
 
