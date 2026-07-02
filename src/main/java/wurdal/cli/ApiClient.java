@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate;
 import wurdal.structures.api.*;
 
 import java.net.http.HttpClient;
-import java.util.Optional;
+import java.util.Locale;
 
 
 public class ApiClient {
@@ -164,10 +164,16 @@ public class ApiClient {
     public Integer getId(String playerName) {
         RestTemplate restTemplate = new RestTemplate();
         JsonNode response = restTemplate.getForObject(
-                baseUrl + "/getId/" + playerName,
+                baseUrl + "/getId/" + playerName.trim().toLowerCase(Locale.ROOT),
                 JsonNode.class
         );
-        return (response != null && response.has("id"))? response.get("id").asInt() : null;
+
+        if (response == null || !response.has("id")) {
+            return null;
+        }
+
+        int id = response.get("id").asInt();
+        return id == -2 ? null : id;
     }
 
     private ApiException toApiException(int statusCode, String responseBody) {
