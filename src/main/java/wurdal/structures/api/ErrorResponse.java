@@ -1,4 +1,4 @@
 package wurdal.structures.api;
 
-public record ErrorResponse(String message, String registerCommand) implements ApiResponse {
+public record ErrorResponse(String message, String registerCommand) implements ApiResponse, ApiError {
 }

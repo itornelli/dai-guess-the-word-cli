@@ -50,7 +50,7 @@ public class WurdalCli {
         }
     }
 
-    private int handleLeaderboard() {
+    private int handleLeaderboard() throws ApiException {
         try {
             LeaderBoard leaderBoard = apiClient.leaderboard();
             if (leaderBoard.players() == null || leaderBoard.players().isEmpty()) {
@@ -71,7 +71,7 @@ public class WurdalCli {
         }
     }
 
-    private boolean ensureServerUp() {
+    private boolean ensureServerUp() throws ApiException {
         try {
             apiClient.links();
             return true;
@@ -81,7 +81,7 @@ public class WurdalCli {
         }
     }
 
-    private int handleRegister(String[] args) {
+    private int handleRegister(String[] args) throws ApiException {
         if (!ensureServerUp()) {
             return 1;
         }
@@ -93,6 +93,14 @@ public class WurdalCli {
         }
 
         String username = args[1].trim();
+        ApiResponse response = apiClient.register(username);
+        if (response instanceof GenError) {
+            throw new ApiException(402, (GenError) response);
+        } else if (response instanceof RegisterRes) {
+            if (((RegisterRes) response).sessionId() != null) {
+                sessionStore.write(((RegisterRes) response).sessionId());
+            }
+        }
 
         if (!PLAYER_NAME_PATTERN.matcher(username).matches()) {
             System.err.println("Invalid player name. Try a different name.");
@@ -104,27 +112,23 @@ public class WurdalCli {
             return 1;
         }
 
-        RegisterRes response = apiClient.register(username);
-        if (response.sessionId() != null) {
-            sessionStore.write(response.sessionId());
-        }
         System.out.println("May the odds be in your favor " + username +"!");
         return 0;
     }
 
-    private int handleLogin(String[] args) {
+    private int handleLogin(String[] args) throws ApiException {
         if (args.length < 2) {
             System.err.println("usage: wurdal login <name>");
             return 1;
         }
         String username = args[1].trim();
-        AuthResponse response = apiClient.login(username);
-        SessionStore.getInstance().write(response.sessionId());
-        //Maybe sessionId should be renamed to Token
-        //wasn't the playerId here?
-        Board boardResponse = apiClient.board();
+            AuthResponse response = apiClient.login(username);
+            SessionStore.getInstance().write(response.sessionId());
+            //Maybe sessionId should be renamed to Token
+            //wasn't the playerId here?
+            Board boardResponse = apiClient.board();
         if (boardResponse instanceof BoardResError) {
-            return 1;
+            throw new ApiException(401, (BoardResError)boardResponse);
         }
         BoardRes res = (BoardRes) boardResponse;
         if (res.user() != null) {
@@ -146,7 +150,7 @@ public class WurdalCli {
         return 0;
     }
 
-    private int handleBoard() {
+    private int handleBoard() throws ApiException {
         Optional<String> session = sessionStore.read();
         if (session.isEmpty()) {
             System.out.println("Please login to continue");
@@ -154,7 +158,7 @@ public class WurdalCli {
         }
         Board response = apiClient.board();
         if (response instanceof BoardResError) {
-            return 1;
+            throw new ApiException(402, (BoardResError)response);
         }
         BoardRes res = (BoardRes)response;
         if (res.user() == null) {
@@ -164,7 +168,7 @@ public class WurdalCli {
         return 0;
     }
 
-    private int handleGuess(String[] args) {
+    private int handleGuess(String[] args) throws ApiException {
         if (args.length < 2) {
             System.err.println("usage: wurdal guess <word>");
             return 1;
@@ -177,7 +181,7 @@ public class WurdalCli {
         String guessWord = args[1].trim();
         Board response = apiClient.guess(guessWord);
         if (response instanceof BoardResError) {
-            return 1;
+            throw new ApiException(402, (BoardResError)response);
         }
         BoardRes res = (BoardRes)response;
         printBoardResponse(res, res.user().name());
@@ -194,13 +198,15 @@ public class WurdalCli {
         BoardRenderer.print(response);
     }
 
-    private void printApiError(ApiException exception) {
-        if (exception.statusCode() == 401) {
-            sessionStore.clear();
+    private void printApiError(ApiException ex) {
+        if (ex.error() instanceof GenError) {
+            System.out.println(((GenError) ex.error()).description());
         }
-        System.out.println(exception.error().message());
-        if (exception.error().registerCommand() != null && !exception.error().registerCommand().isBlank()) {
-            System.out.println(exception.error().registerCommand());
+        else if (ex.error() instanceof BoardResError) {
+            System.out.println(((BoardResError) ex.error()).error().description());
+        }
+        else if (ex.error() instanceof wurdal.structures.api.ErrorResponse) {
+            System.out.println(((ErrorResponse) ex.error()).message());
         }
     }
 }

@@ -58,6 +58,11 @@ public class Player {
     }
 
     public void findAverage(int guesses) {
+        //0 average is impossible
+        if (this.averageGuesses == 0.0) {
+            this.averageGuesses = (double) guesses;
+            return;
+        }
         this.averageGuesses = (this.averageGuesses + guesses)/2;
     }
 

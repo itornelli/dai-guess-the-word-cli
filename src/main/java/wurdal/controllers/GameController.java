@@ -399,7 +399,6 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         else if (status == 2){
             resultStatus = "lost";
         }
-
         Board boardResObj = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(session.getHiddenWord().length(),guessList,
