@@ -93,7 +93,6 @@ public class WurdalCli {
         }
 
         String username = args[1].trim();
-        ApiResponse response = apiClient.register(username);
 
         if (!PLAYER_NAME_PATTERN.matcher(username).matches()) {
             System.err.println("Invalid player name. Try a different name.");
@@ -105,6 +104,7 @@ public class WurdalCli {
             return 1;
         }
 
+        ApiResponse response = apiClient.register(username);
         if (response instanceof GenError) {
             throw new ApiException(402, (GenError) response);
         } else if (response instanceof RegisterRes) {
