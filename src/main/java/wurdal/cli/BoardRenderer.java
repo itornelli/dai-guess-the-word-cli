@@ -52,7 +52,10 @@ public final class BoardRenderer {
             }
         }
 
-        if (board.currentGuesses().guesses().size() >= 6) {
+        String status = board.currentGuesses().result().status();
+        if (status.equalsIgnoreCase("won")) {
+            System.out.println("🎉 You won! 🎉");
+        } else if (status.equalsIgnoreCase("lost")) {
             System.out.println("Too bad, the word was " + board.currentGuesses().result().word());
         }
     }
