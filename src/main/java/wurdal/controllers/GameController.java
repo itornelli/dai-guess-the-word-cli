@@ -42,7 +42,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         String name = req.name() == null ? null : req.name().trim();
         if (name == null || name.isBlank()) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                    .body(error("Name is required"));
+                    .body(error("Name cannot be empty."));
         }
         try {
             Player player = new Player(name);
