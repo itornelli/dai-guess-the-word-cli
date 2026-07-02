@@ -2,6 +2,7 @@ package wurdal.cli;
 
 import java.util.Locale;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import wurdal.structures.api.*;
 import wurdal.cli.ApiClient.ApiException;
@@ -10,6 +11,8 @@ public class WurdalCli {
 
     private final ApiClient apiClient;
     private final SessionStore sessionStore;
+
+    private static final Pattern PLAYER_NAME_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+$");
 
     public WurdalCli() {
         this(new ApiClient(), SessionStore.getInstance());
@@ -52,6 +55,10 @@ public class WurdalCli {
             return 1;
         }
         String username = args[1].trim();
+        if (!PLAYER_NAME_PATTERN.matcher(username).matches()) {
+            System.err.println("Invalid player name. Try a different name.");
+            return 1;
+        }
         RegisterRes response = apiClient.register(username);
         sessionStore.write(String.valueOf(response.id()));
         System.out.println("May the odds be in your favor " + response.name() + "!");
