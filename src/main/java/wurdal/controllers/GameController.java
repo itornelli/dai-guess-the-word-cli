@@ -245,8 +245,13 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             resultStatus = "lost";
         }
 
-        gameRepo.save(updated);
-        playerRepo.save(player);
+        if (updated.getStatus() == 0 || updated.getStatus() == 2) {
+            gameRepo.save(updated);
+            Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), player.getId());
+            gameRepo.save(newGame);
+        } else {
+            gameRepo.save(updated);
+        }
         Board guessResponse = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(updated.getHiddenWord().length(),guessList,
@@ -330,8 +335,13 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             resultStatus = "lost";
         }
 
-        gameRepo.save(updated);
-        playerRepo.save(player);
+        if (updated.getStatus() == 0 || updated.getStatus() == 2) {
+            gameRepo.save(updated);
+            Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), player.getId());
+            gameRepo.save(newGame);
+        } else {
+            gameRepo.save(updated);
+        }
         Board guessResponse = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
                 new BoardRes.User(player.getId(),player.getName()),
                 new BoardRes.Current(updated.getHiddenWord().length(),guessList,

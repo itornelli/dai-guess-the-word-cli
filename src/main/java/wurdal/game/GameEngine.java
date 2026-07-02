@@ -30,7 +30,6 @@ import wurdal.persistence.PersistenceLayer;
 @Component
 public class GameEngine {
 
-    public static final int DEFAULT_WORD_LENGTH = 5;
     public static final int BOARD_ROWS = 6;
     public static final String CELL_BORDER = "*****";
     public static final String ANSI_RESET = "\u001B[0m";

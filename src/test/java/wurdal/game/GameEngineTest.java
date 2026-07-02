@@ -78,7 +78,6 @@ public class GameEngineTest {
     
     @Test
     public void testDefaultGameConstants() {
-        assertEquals(5, GameEngine.DEFAULT_WORD_LENGTH);
         assertEquals(6, GameEngine.BOARD_ROWS);
     }
     
@@ -107,14 +106,16 @@ public class GameEngineTest {
         public void saveGameState(Map<String, String> hiddenWords, Map<String, List<String>> guesses) {
         }
         
+        private static final List<String> WORDS = List.of("stone", "crane", "stole", "steal", "melon", "cat", "jumble");
+
         @Override
         public List<String> loadWordDictionary() {
-            return List.of("stone", "crane", "stole", "steal", "melon");
+            return WORDS;
         }
         
         @Override
         public List<String> loadGuessableWords() {
-            return List.of("stone", "crane", "stole", "steal", "melon", "beast", "feast");
+            return WORDS;
         }
     }
 }

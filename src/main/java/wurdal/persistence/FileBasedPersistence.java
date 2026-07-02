@@ -16,18 +16,16 @@ import wurdal.leaderboard.LeaderboardEntry;
  * Stores:
  * - Players and game history: game_state/players.txt (CSV: name,game1,game2,...)
  * - Current games: game_state/games.txt (CSV: name:hiddenWord:guess1,guess2,...)
- * - Secret words: word_bank/wordle_dict.txt (one word per line)
- * - Valid guesses: word_bank/valid_words.txt (one word per line)
- * 
+ * - Words: word_bank/words.txt (one word per line, words may vary in length)
+ *
  * Future implementations can replace this with JSON, database, or other formats.
  */
 public class FileBasedPersistence implements PersistenceLayer {
     
     private static final String PLAYERS_FILE = "game_state/players.txt";
     private static final String GAMES_FILE = "game_state/games.txt";
-    private static final String WORD_DICT_FILE = "word_bank/wordle_dict.txt";
-    private static final String VALID_WORDS_FILE = "word_bank/valid_words.txt";
-    
+    private static final String WORDS_FILE = "word_bank/words.txt";
+
     private static final String GAME_STATE_DIR = "game_state";
     private static final String WORD_BANK_DIR = "word_bank";
 
@@ -152,12 +150,12 @@ public class FileBasedPersistence implements PersistenceLayer {
 
     @Override
     public List<String> loadWordDictionary() {
-        return loadWordFile(WORD_DICT_FILE, "word dictionary");
+        return loadWordFile(WORDS_FILE, "word dictionary");
     }
 
     @Override
     public List<String> loadGuessableWords() {
-        return loadWordFile(VALID_WORDS_FILE, "guessable words");
+        return loadWordFile(WORDS_FILE, "guessable words");
     }
 
     private List<String> loadWordFile(String filePath, String fileDescription) {

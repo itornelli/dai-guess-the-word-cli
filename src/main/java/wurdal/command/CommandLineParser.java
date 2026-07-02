@@ -76,8 +76,9 @@ public class CommandLineParser {
             System.err.println("No active game for player: " + playerName);
             System.exit(1);
         }
-        // Check if the guess is the word length
-        if (input.length() != GameEngine.DEFAULT_WORD_LENGTH || !game.wordDictionary.contains(input)) {
+        // Check if the guess is the correct length for the current hidden word
+        String hiddenWord = game.playerHiddenWords.get(playerName);
+        if (input.length() != hiddenWord.length() || !game.wordDictionary.contains(input)) {
             System.err.println("Invalid guess [%s]".formatted(input));
             System.exit(1);
         }
@@ -89,7 +90,7 @@ public class CommandLineParser {
         // Regardless if they got it or not save the guess
         game.playerGuesses.get(playerName).add(input);
 
-        game.printBoardWithGuesses(GameEngine.DEFAULT_WORD_LENGTH, game.playerHiddenWords.get(playerName), game.playerGuesses.get(playerName));
+        game.printBoardWithGuesses(game.playerHiddenWords.get(playerName).length(), game.playerHiddenWords.get(playerName), game.playerGuesses.get(playerName));
         // Check if the player has correctly guessed the word / or has reached max attempts
         var correctlyGuessed = input.equals(game.playerHiddenWords.get(playerName));
         var outOfGuesses = game.playerGuesses.get(playerName).stream().count() >= GameEngine.BOARD_ROWS;
@@ -167,7 +168,7 @@ public class CommandLineParser {
 
         game.playerHiddenWords.put(playerName, game.chooseRandomWord(playerName));
         game.playerGuesses.put(playerName, new ArrayList<>());
-        game.printNewGameBoard(GameEngine.DEFAULT_WORD_LENGTH);
+        game.printNewGameBoard(game.playerHiddenWords.get(playerName).length());
         game.saveGamesToFile();
     }
 
