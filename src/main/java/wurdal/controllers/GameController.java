@@ -59,7 +59,7 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             );
             return ResponseEntity.status(HttpStatus.CREATED).body(res);
         } catch (DataIntegrityViolationException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(error("Player name already exists"));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error("That name is already taken. Please choose another."));
         }
     }
 

@@ -6,7 +6,7 @@ public record Links(
         Leaderboard leaderboard,
         Board board,
         Guess guess
-) implements ApiResponse {
+) {
     public record Login(String href) {}
     public record Register(String href) {}
     public record Leaderboard(String href) {}

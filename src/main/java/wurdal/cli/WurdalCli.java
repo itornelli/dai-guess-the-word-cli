@@ -121,7 +121,7 @@ public class WurdalCli {
     private int handleLeaderboard() {
         LeaderBoard leaderboard = apiClient.leaderboard();
         if (leaderboard.players().isEmpty()) {
-            System.out.println("No players yet.");
+            System.out.println("No players on the leaderboard yet. Be the first to register!");
             return 0;
         }
         System.out.println("Leaderboard:");

@@ -1,4 +1,4 @@
 package wurdal.structures.api;
 
-public record GuessReq(String guess) implements ApiRequest {
+public record GuessReq(String guess) {
 }
