@@ -47,7 +47,11 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
         try {
             Player player = new Player(name);
             Player saved = playerRepo.saveAndFlush(player);
-            gameRepo.save(new Game(gameEngine.chooseRandomWord(saved.getName()), new ArrayList<>(), saved.getId()));
+
+            Game game = gameRepo.save(new Game(gameEngine.chooseRandomWord(saved.getName()), new ArrayList<>(), saved.getId()));
+
+            saved.setInGame(true);
+            playerRepo.save(saved);
 
             RegisterRes res = new RegisterRes(
                     saved.getId(),
@@ -150,6 +154,8 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
             gameRepo.save(game);
             Game nextGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), player.getId());
             gameRepo.save(nextGame);
+            player.setInGame(true);
+            playerRepo.save(player);
         } else {
             gameRepo.save(game);
         }

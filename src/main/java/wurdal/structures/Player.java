@@ -10,6 +10,7 @@ public class Player {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(unique = true, nullable = false)
     private String name;
     private Integer gamesWon = 0;
     private Integer gamesLost = 0;
@@ -20,9 +21,7 @@ public class Player {
         this.name = name;
     }
 
-    public Player() {
-        this.name = null;
-    }
+    public Player() {}
 
     public Integer getId() { return id; }
     public String getName() { return name; }
@@ -32,9 +31,7 @@ public class Player {
     public Boolean getIsInGame() { return isInGame; }
 
     public void setName(String name) { this.name = name; }
-    public void setGamesWon(int gamesWon) { this.gamesWon = gamesWon; }
-    public void setGamesLost(int gamesLost) { this.gamesLost = gamesLost; }
-    public void setAverageGuesses(double averageGuesses) { this.averageGuesses = averageGuesses; }
+    public void setInGame(boolean inGame) { this.isInGame = inGame; }
 
     public void winGame(int guesses) {
         gamesWon++;
