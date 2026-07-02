@@ -5,55 +5,58 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled("Integration test cases only; requires running Postgres and API server")
+@Disabled("Integration tests: require a running Postgres instance and API server")
 public class AuthAcceptanceScenariosTest {
 
     @Test
     void userPlaysGameScenario() {
         // Given Alice with a fresh CLI session
-        // When register Alice + password
-        // Then greeting is "May the odds be in your favor Alice!" and empty board is shown
+
+        // When: wurdal register Alice
+        // Then: "May the odds be in your favor Alice!" is shown with an empty board
+        // And: a player id is stored in the session file
         assertTrue(true);
 
-        // When board is called while logged in
-        // Then same greeting and board are shown
+        // When: wurdal board (while logged in)
+        // Then: same greeting and board are shown
         assertTrue(true);
 
-        // When guess <word> is submitted
-        // Then board shows the new guess row
+        // When: wurdal guess <word>
+        // Then: board shows the new guess row with correct letter colors
         assertTrue(true);
 
-        // When logout is called
-        // Then "Successfully logged out" is shown
+        // When: wurdal logout
+        // Then: "Successfully logged out" is shown
         assertEquals("Successfully logged out", "Successfully logged out");
 
-        // When board is called while logged out
-        // Then "Please login to continue" is shown
+        // When: wurdal board (while logged out)
+        // Then: "Please login to continue" is shown
         assertEquals("Please login to continue", "Please login to continue");
 
-        // When login ALICE + password and board are called
-        // Then prior board state is restored
+        // When: wurdal login alice (case-insensitive) and wurdal board
+        // Then: prior board state is restored
         assertTrue(true);
     }
 
     @Test
     void signedOutUserTriesToPlayScenario() {
         // Given a logged out user
-        // When board is called
-        // Then "Please login to continue" is shown
+
+        // When: wurdal board
+        // Then: "Please login to continue" is shown
         assertEquals("Please login to continue", "Please login to continue");
 
-        // When guess <word> is called
-        // Then "Please login to continue" is shown
+        // When: wurdal guess <word>
+        // Then: "Please login to continue" is shown
         assertEquals("Please login to continue", "Please login to continue");
     }
 
     @Test
     void unregisteredUserLogsInScenario() {
         // Given Jordan is not registered
-        // When login Jordan + password is called
-        // Then "Could not find user Jordan. Please register" is shown
-        // And "wurdal register Jordan" example command is shown
+
+        // When: wurdal login Jordan
+        // Then: error message "Could not find user Jordan. Please register" is shown
         assertTrue(true);
     }
 }

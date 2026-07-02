@@ -1,16 +1,13 @@
 package wurdal.structures.api;
 
-
 public record Links(
         Register register,
         Login login,
-        Logout logout,
         Leaderboard leaderboard,
-        Guess guess,
-        Board board
+        Board board,
+        Guess guess
 ) implements ApiResponse {
     public record Login(String href) {}
-    public record Logout(String href) {}
     public record Register(String href) {}
     public record Leaderboard(String href) {}
     public record Board(String href) {}

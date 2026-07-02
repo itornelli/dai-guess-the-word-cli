@@ -37,3 +37,5 @@ databaseChangeLog:
       file: classpath:db/changelog/018a-fix-player-in-game-trigger.sql
   - include:
       file: classpath:db/changelog/019a-delete-all-entries.sql
+  - include:
+      file: classpath:db/changelog/020a-drop-player-token.sql
