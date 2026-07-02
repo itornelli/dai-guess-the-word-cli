@@ -1,8 +1,5 @@
 package wurdal.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -13,611 +10,228 @@ import org.springframework.web.bind.annotation.*;
 import wurdal.game.GameEngine;
 import wurdal.repository.GameRepository;
 import wurdal.repository.PlayerRepository;
-import wurdal.structures.*;
+import wurdal.structures.Game;
+import wurdal.structures.Player;
 import wurdal.structures.api.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
-
 
 @RestController
 public record GameController(PlayerRepository playerRepo, GameRepository gameRepo, GameEngine gameEngine) {
+
     static final Logger logger = LoggerFactory.getLogger(GameController.class);
-    static final String REGISTER_ENDPOINT = "/player";
-    static final String NEW_GAME_ENDPOINT = "/new-game/{playerId}";
-    static final String GUESS_ENDPOINT = "/{playerId}/guess";
-    static final String BOARD_ENDPOINT = "/{playerId}/board";
-    static final String LOGIN_ENDPOINT = "/sessions";
-    static final String LOGOUT_ENDPOINT = ""; //not using one rn
-    static final String LEADERBOARD_ENDPOINT = "/leaderboard";
 
-    static final String[] GUESS_ENDPOINT_LINKS = {GUESS_ENDPOINT, BOARD_ENDPOINT};
-    static final String[] BOARD_ENDPOINT_LINKS = {GUESS_ENDPOINT, BOARD_ENDPOINT};
-    static final String[] NEWGAME_ENDPOINT_LINKS = {REGISTER_ENDPOINT, NEW_GAME_ENDPOINT, GUESS_ENDPOINT, BOARD_ENDPOINT};
-    static final String[] REGISTER_LINKS = {REGISTER_ENDPOINT, NEW_GAME_ENDPOINT, GUESS_ENDPOINT, BOARD_ENDPOINT};
+    // ── Root ─────────────────────────────────────────────────────────────────
 
-    static final String[] ALL_LINKS = {REGISTER_ENDPOINT, NEW_GAME_ENDPOINT, GUESS_ENDPOINT, BOARD_ENDPOINT};
-    public Links buildLinkForPlayer(String[] endpoints, Player player) {
-        Links.Register registerLink = null;
-        Links.Login loginLink = null;
-        Links.Logout logoutLink = null;
-        Links.Leaderboard leaderboardLink = null;
-        Links.Board boardLink = null;
-        Links.Guess guessLink = null;
-
-        for (String ep : endpoints) {
-            switch(ep) {
-                case REGISTER_ENDPOINT -> {
-                    registerLink = new Links.Register(REGISTER_ENDPOINT);
-                }
-                case NEW_GAME_ENDPOINT -> {
-
-                }
-                case GUESS_ENDPOINT -> {
-                    String href = GUESS_ENDPOINT.substring(0, GUESS_ENDPOINT.indexOf("{")) + player.getId() + GUESS_ENDPOINT.substring(GUESS_ENDPOINT.indexOf("}")+1, GUESS_ENDPOINT.length());
-                    guessLink = new Links.Guess(href);
-                }
-                case BOARD_ENDPOINT -> {
-                    String href = BOARD_ENDPOINT.substring(0, BOARD_ENDPOINT.indexOf("{")) + player.getId() + BOARD_ENDPOINT.substring(BOARD_ENDPOINT.indexOf("}")+1, BOARD_ENDPOINT.length());
-                    boardLink = new Links.Board(href);
-                }
-                case LOGIN_ENDPOINT -> {
-                    String href = LOGIN_ENDPOINT.substring(0, LOGIN_ENDPOINT.indexOf("{")) + player.getId() + LOGIN_ENDPOINT.substring(LOGIN_ENDPOINT.indexOf("}")+1, LOGIN_ENDPOINT.length());
-                    loginLink = new Links.Login(href);
-                }
-                case LEADERBOARD_ENDPOINT -> {
-                    String href = LEADERBOARD_ENDPOINT;
-                    leaderboardLink = new Links.Leaderboard(href);
-                }
-            }
-        }
-
-        return new Links(registerLink, loginLink, logoutLink, leaderboardLink, guessLink, boardLink);
-    }
-    public Links buildAllLinks() {
-        Links.Register registerLink = null;
-        Links.Login loginLink = null;
-        Links.Logout logoutLink = null;
-        Links.Leaderboard leaderboardLink = null;
-        Links.Board boardLink = null;
-        Links.Guess guessLink = null;
-
-        for (String ep : ALL_LINKS) {
-            switch(ep) {
-                case REGISTER_ENDPOINT -> {
-                    registerLink = new Links.Register(REGISTER_ENDPOINT);
-                }
-                case NEW_GAME_ENDPOINT -> {
-
-                }
-                case GUESS_ENDPOINT -> {
-                    String href = GUESS_ENDPOINT;
-                    guessLink = new Links.Guess(href);
-                }
-                case BOARD_ENDPOINT -> {
-                    String href = BOARD_ENDPOINT;
-                    boardLink = new Links.Board(href);
-                }
-                case LOGIN_ENDPOINT -> {
-                    String href = LOGIN_ENDPOINT;
-                    loginLink = new Links.Login(href);
-                }
-                case LEADERBOARD_ENDPOINT -> {
-                    String href = LEADERBOARD_ENDPOINT;
-                    leaderboardLink = new Links.Leaderboard(href);
-                }
-            }
-        }
-
-        return new Links(registerLink, loginLink, logoutLink, leaderboardLink, guessLink, boardLink);
+    @GetMapping("/")
+    public ResponseEntity<?> getLinks() {
+        return ResponseEntity.ok(Map.of("_links", Map.of(
+                "register",    Map.of("href", "/players"),
+                "login",       Map.of("href", "/sessions"),
+                "leaderboard", Map.of("href", "/leaderboard")
+        )));
     }
 
-    @PostMapping("/session")
-    public ResponseEntity<ApiResponse> login(@RequestBody CredentialsRequest req) {
-        String name = req.username();
-        Optional<Player> playerOp = playerRepo.findFirstByName(name);
-        if (playerOp.isEmpty()) {
-            return ResponseEntity.badRequest().body(new GenError("error: player does not exist"));
-        }
-        Player player = playerOp.get();
-        return ResponseEntity.ok(new AuthResponse("message", player.getToken().toString(), null));
-    }
+    // ── Players ───────────────────────────────────────────────────────────────
 
-    //[CREATE]
-    @PostMapping(value="/player")
-    public ResponseEntity<ApiResponse> register(@RequestBody RegisterReq req) {
+    @PostMapping("/players")
+    public ResponseEntity<?> register(@RequestBody RegisterReq req) {
+        String name = req.name() == null ? null : req.name().trim();
+        if (name == null || name.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(error("Name cannot be empty."));
+        }
         try {
-            Player player = new Player(req.name());
-            Player saved = playerRepo.saveAndFlush(player); // flush to surface constraint violations here
+            Player player = new Player(name);
+            Player saved = playerRepo.saveAndFlush(player);
 
-            Optional<Player> opWithToken = playerRepo.findById(saved.getId());
+            Game game = gameRepo.save(new Game(gameEngine.chooseRandomWord(saved.getName()), new ArrayList<>(), saved.getId()));
 
-            if (opWithToken.isEmpty()) {
-                return ResponseEntity.ok(new GenError("Player generation error"));
-            }
-            Player withToken = opWithToken.get();
+            saved.setInGame(true);
+            playerRepo.save(saved);
 
-            if (withToken.getIsInGame() == null|| !withToken.getIsInGame()) {
-                gameRepo.save(new Game(gameEngine.chooseRandomWord(withToken.getName()), new ArrayList<>(), withToken.getId()));
-            }
-
-            String token = withToken.getToken() != null ? withToken.getToken().toString() : null;
-            return ResponseEntity.ok(new RegisterRes(saved.getId(), token, saved.getName()));
-
+            RegisterRes res = new RegisterRes(
+                    saved.getId(),
+                    saved.getName(),
+                    new RegisterRes.RegisterLinks(
+                            new Links.Board("/players/" + saved.getId() + "/board"),
+                            new Links.Guess("/players/" + saved.getId() + "/guess")
+                    )
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(res);
         } catch (DataIntegrityViolationException e) {
-            // duplicate player name (unique constraint)
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new GenError("Player name already exists"));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error("That name is already taken. Please choose another."));
         }
     }
 
+    // ── Sessions ──────────────────────────────────────────────────────────────
 
+    @PostMapping("/sessions")
+    public ResponseEntity<?> login(@RequestBody CredentialsRequest req) {
+        String name = req.name() == null ? null : req.name().trim();
+        if (name == null || name.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(error("Name is required"));
+        }
+        Optional<Player> playerOpt = playerRepo.findFirstByName(name);
+        if (playerOpt.isEmpty()) {
+            // case-insensitive fallback
+            playerOpt = playerRepo.findAll().stream()
+                    .filter(p -> p.getName().equalsIgnoreCase(name))
+                    .findFirst();
+        }
+        if (playerOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(error("Could not find user " + name + ". Please register"));
+        }
+        Player player = playerOpt.get();
+        return ResponseEntity.ok(new AuthResponse(player.getId(), player.getName()));
+    }
 
-//    //OLD
-//    @PostMapping(value="/guess/{guessWord}")
-//    public ResponseEntity<BoardRes> guess(@PathVariable String guessWord, @RequestBody Player player) {
-//        if (player.getId() == null) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//        Optional<Game> gameOpt = gameRepo.findFirstByPlayerIdOrderByIdDesc(player.getId());
-//        if (gameOpt.isEmpty()) {
-//            return ResponseEntity.notFound().build();
-//        }
-//        Game updated = gameOpt.get();
-//        updated.addGuessWord(guessWord);
-//        gameRepo.save(updated);
-//        //return the board string
-//        return ResponseEntity.ok(new BoardRes(player.getId(), player.getName(), updated.getHiddenWord().length(), updated.getHiddenWord(), updated.getCurrentGuesses()));
-//    }
-    //public void printBoardWithGuesses(int wordLength, String hiddenWord, List<String> guesses)
-    @PostMapping(value="/{playerId}/guess")
-    public ResponseEntity<Board> guessById(@PathVariable Integer playerId, @RequestBody GuessReq guessReq) {
-        String guessWord = guessReq.guess();
+    // ── Board ─────────────────────────────────────────────────────────────────
+
+    @GetMapping("/players/{playerId}/board")
+    public ResponseEntity<?> board(
+            @PathVariable Integer playerId,
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+
+        ResponseEntity<?> authCheck = checkAuth(playerId, authorization);
+        if (authCheck != null) return authCheck;
+
+        Optional<Player> playerOpt = playerRepo.findById(playerId);
+        if (playerOpt.isEmpty()) return ResponseEntity.notFound().build();
 
         Optional<Game> gameOpt = gameRepo.findFirstByPlayerIdOrderByIdDesc(playerId);
-        if (gameOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Optional<Player> play = playerRepo.findById(playerId);
-        if (play.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        if (gameOpt.isEmpty()) return ResponseEntity.notFound().build();
+
+        return ResponseEntity.ok(buildBoardRes(playerOpt.get(), gameOpt.get()));
+    }
+
+    // ── Guess ─────────────────────────────────────────────────────────────────
+
+    @PostMapping("/players/{playerId}/guess")
+    public ResponseEntity<?> guess(
+            @PathVariable Integer playerId,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @RequestBody GuessReq guessReq) {
+
+        ResponseEntity<?> authCheck = checkAuth(playerId, authorization);
+        if (authCheck != null) return authCheck;
+
+        Optional<Player> playerOpt = playerRepo.findById(playerId);
+        if (playerOpt.isEmpty()) return ResponseEntity.notFound().build();
+
+        Optional<Game> gameOpt = gameRepo.findFirstByPlayerIdOrderByIdDesc(playerId);
+        if (gameOpt.isEmpty()) return ResponseEntity.notFound().build();
+
+        Player player = playerOpt.get();
+        Game game = gameOpt.get();
+        String guessWord = guessReq.guess() == null ? "" : guessReq.guess().trim().toLowerCase();
+
+        if (guessWord.length() != game.getHiddenWord().length()) {
+            int expected = game.getHiddenWord().length();
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(Map.of("error", Map.of("description", "Guess must be exactly " + expected + " letters")));
         }
 
-        Player player = play.get();
-        Game updated = gameOpt.get();
-
-        if(guessWord.length() != updated.getHiddenWord().length()) {
-            int wordLength = updated.getHiddenWord().length();
-            return ResponseEntity.badRequest().body(new BoardResError(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player), new GenError("Guess must be exactly " + wordLength + " letters")));
-        }
-
-        if (updated.getCurrentGuesses() == null) {
-            updated.emergencySetCurrentGuesses(new ArrayList<>());
-        }
-        if (updated.getStatus() == 1 && updated.getCurrentGuesses().size() < 6) {
-            updated.addGuessWord(guessWord);
-            if (guessWord.equals(updated.getHiddenWord())) {
-                updated.setStatus(0);
-                player.setGamesWon(player.getGamesWon() + 1);
-                player.setAverageGuesses(updated.getCurrentGuesses().size());
+        if (game.getStatus() == 1 && game.getCurrentGuesses().size() < GameEngine.BOARD_ROWS) {
+            game.addGuessWord(guessWord);
+            if (guessWord.equals(game.getHiddenWord())) {
+                game.setStatus(0);
+                player.winGame(game.getCurrentGuesses().size());
+                playerRepo.save(player);
+            } else if (game.getCurrentGuesses().size() >= GameEngine.BOARD_ROWS) {
+                game.setStatus(2);
+                player.loseGame();
+                playerRepo.save(player);
             }
-            else if (updated.getCurrentGuesses().size() >= 6) {
-                updated.setStatus(2);
-                player.setGamesLost(player.getGamesLost() + 1);
-                player.setAverageGuesses(updated.getCurrentGuesses().size());
-            }
         }
 
-
-        List<BoardRes.Guess> guessList = new ArrayList<>();
-        for (String guess : updated.getCurrentGuesses()) {
-            List<BoardRes.LetterResult> letterResults = new ArrayList<>();
-            String[] colors = gameEngine.evaluateGuessColors(updated.getHiddenWord(), guess, updated.getHiddenWord().length());
-            for(int i = 0; i < guess.length(); i++) {
-                String colorResult = "";
-                if(colors[i].equals(GameEngine.ANSI_GREEN)) {
-                    colorResult = "full";
-                }
-                else if (colors[i].equals(GameEngine.ANSI_YELLOW)) {
-                    colorResult = "partial";
-                }
-                else {
-                    colorResult = "none";
-                }
-                BoardRes.LetterResult result = new BoardRes.LetterResult(guess.charAt(i), colorResult);
-                letterResults.add(result);
-            }
-            BoardRes.Guess guessObj = new BoardRes.Guess(letterResults);
-            guessList.add(guessObj);
-        }
-
-        String resultStatus = "";
-        Integer status = updated.getStatus();
-        if (status == 0) {
-            resultStatus = "won";
-        }
-        else if (status == 1) {
-            resultStatus = "in-progress";
-        }
-        else if (status == 2){
-            resultStatus = "lost";
-        }
-
-        if (updated.getStatus() == 0 || updated.getStatus() == 2) {
-            gameRepo.save(updated);
-            Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), player.getId());
-            gameRepo.save(newGame);
+        if (game.getStatus() == 0 || game.getStatus() == 2) {
+            gameRepo.save(game);
+            Game nextGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), player.getId());
+            gameRepo.save(nextGame);
+            player.setInGame(true);
+            playerRepo.save(player);
         } else {
-            gameRepo.save(updated);
+            gameRepo.save(game);
         }
-        Board guessResponse = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
-                new BoardRes.User(player.getId(),player.getName()),
-                new BoardRes.Current(updated.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus, updated.getHiddenWord())));
-        return ResponseEntity.ok(guessResponse);
+
+        return ResponseEntity.ok(buildBoardRes(player, game));
     }
 
-    @PostMapping(value="/guess")
-    public ResponseEntity<Board> guess(@RequestHeader("Authorization") String authorization, @RequestBody GuessReq guessReq) {
-        String guessWord = guessReq.guess();
-        String token = authorization.replaceFirst("(?i)^Bearer\\s+", "");
-
-        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(token));
-        if (play.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Player player = play.get();
-
-        Optional<Game> gameOpt = gameRepo.findFirstByPlayerIdOrderByIdDesc(player.getId());
-        if (gameOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Game updated = gameOpt.get();
-
-        if(guessWord.length() != updated.getHiddenWord().length()) {
-            int wordLength = updated.getHiddenWord().length();
-            return ResponseEntity.badRequest().body(new BoardResError(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player), new GenError("Guess must be exactly " + wordLength + " letters")));
-        }
-
-        if (updated.getCurrentGuesses() == null) {
-            updated.emergencySetCurrentGuesses(new ArrayList<>());
-        }
-        if (updated.getStatus() == 1 && updated.getCurrentGuesses().size() < 6) {
-            updated.addGuessWord(guessWord);
-            if (guessWord.equals(updated.getHiddenWord())) {
-                updated.setStatus(0);
-                player.setGamesWon(player.getGamesWon() + 1);
-                player.setAverageGuesses(updated.getCurrentGuesses().size());
-            }
-            else if (updated.getCurrentGuesses().size() >= 6) {
-                updated.setStatus(2);
-                player.setGamesLost(player.getGamesLost() + 1);
-                player.setAverageGuesses(updated.getCurrentGuesses().size());
-            }
-        }
-
-
-        List<BoardRes.Guess> guessList = new ArrayList<>();
-        for (String guess : updated.getCurrentGuesses()) {
-            List<BoardRes.LetterResult> letterResults = new ArrayList<>();
-            String[] colors = gameEngine.evaluateGuessColors(updated.getHiddenWord(), guess, updated.getHiddenWord().length());
-            for(int i = 0; i < guess.length(); i++) {
-                String colorResult = "";
-                if(colors[i].equals(GameEngine.ANSI_GREEN)) {
-                    colorResult = "full";
-                }
-                else if (colors[i].equals(GameEngine.ANSI_YELLOW)) {
-                    colorResult = "partial";
-                }
-                else {
-                    colorResult = "none";
-                }
-                BoardRes.LetterResult result = new BoardRes.LetterResult(guess.charAt(i), colorResult);
-                letterResults.add(result);
-            }
-            BoardRes.Guess guessObj = new BoardRes.Guess(letterResults);
-            guessList.add(guessObj);
-        }
-
-        String resultStatus = "";
-        Integer status = updated.getStatus();
-        if (status == 0) {
-            resultStatus = "won";
-        }
-        else if (status == 1) {
-            resultStatus = "in-progress";
-        }
-        else if (status == 2){
-            resultStatus = "lost";
-        }
-
-        if (updated.getStatus() == 0 || updated.getStatus() == 2) {
-            gameRepo.save(updated);
-            Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), player.getId());
-            gameRepo.save(newGame);
-        } else {
-            gameRepo.save(updated);
-        }
-        Board guessResponse = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
-                new BoardRes.User(player.getId(),player.getName()),
-                new BoardRes.Current(updated.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus,updated.getHiddenWord())));
-        return ResponseEntity.ok(guessResponse);
-    }
-    //[READ]
-    //public void printBoardWithGuesses(int wordLength, String hiddenWord, List<String> guesses)
-    @GetMapping("/board/{playerId}")
-    public ResponseEntity<Board> boardById(@PathVariable Integer playerId) {
-        if (playerId == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        Optional<Player> play = playerRepo.findById(playerId);
-        if (play.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Player player = play.get();
-        Optional<Game> sessionOpt = gameRepo.findFirstByPlayerIdOrderByIdDesc(playerId);
-        if (sessionOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Game session = sessionOpt.get();
-
-        List<BoardRes.Guess> guessList = new ArrayList<>();
-        for (String guess : session.getCurrentGuesses()) {
-            List<BoardRes.LetterResult> letterResults = new ArrayList<>();
-            String[] colors = gameEngine.evaluateGuessColors(session.getHiddenWord(), guess, session.getHiddenWord().length());
-            for(int i = 0; i < guess.length(); i++) {
-                String colorResult = "";
-                if(colors[i].equals(GameEngine.ANSI_GREEN)) {
-                    colorResult = "full";
-                }
-                else if (colors[i].equals(GameEngine.ANSI_YELLOW)) {
-                    colorResult = "partial";
-                }
-                else {
-                    colorResult = "none";
-                }
-                BoardRes.LetterResult result = new BoardRes.LetterResult(guess.charAt(i), colorResult);
-                letterResults.add(result);
-            }
-            BoardRes.Guess guessObj = new BoardRes.Guess(letterResults);
-            guessList.add(guessObj);
-        }
-
-        String resultStatus = "";
-        Integer status = session.getStatus();
-        if (status == 0) {
-            resultStatus = "won";
-        }
-        else if (status == 1) {
-            resultStatus = "in-progress";
-        }
-        else if (status == 2){
-            resultStatus = "lost";
-        }
-        Board boardResObj = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
-                new BoardRes.User(player.getId(),player.getName()),
-                new BoardRes.Current(session.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus, session.getHiddenWord())));
-        return ResponseEntity.ok(boardResObj);
-    }
-
-    @GetMapping("/board")
-    public ResponseEntity<Board> board(@RequestHeader("Authorization") String authorization) {
-        System.out.println(authorization);
-        String token = authorization.replaceFirst("(?i)^Bearer\\s+", "");
-
-        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(token));
-        if (play.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Player player = play.get();
-        Optional<Game> sessionOpt = gameRepo.findFirstByPlayerIdOrderByIdDesc(player.getId());
-        if (sessionOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Game session = sessionOpt.get();
-
-        List<BoardRes.Guess> guessList = new ArrayList<>();
-        for (String guess : session.getCurrentGuesses()) {
-            List<BoardRes.LetterResult> letterResults = new ArrayList<>();
-            String[] colors = gameEngine.evaluateGuessColors(session.getHiddenWord(), guess, session.getHiddenWord().length());
-            for(int i = 0; i < guess.length(); i++) {
-                String colorResult = "";
-                if(colors[i].equals(GameEngine.ANSI_GREEN)) {
-                    colorResult = "full";
-                }
-                else if (colors[i].equals(GameEngine.ANSI_YELLOW)) {
-                    colorResult = "partial";
-                }
-                else {
-                    colorResult = "none";
-                }
-                BoardRes.LetterResult result = new BoardRes.LetterResult(guess.charAt(i), colorResult);
-                letterResults.add(result);
-            }
-            BoardRes.Guess guessObj = new BoardRes.Guess(letterResults);
-            guessList.add(guessObj);
-        }
-
-        String resultStatus = "";
-        Integer status = session.getStatus();
-        if (status == 0) {
-            resultStatus = "won";
-        }
-        else if (status == 1) {
-            resultStatus = "in-progress";
-        }
-        else if (status == 2){
-            resultStatus = "lost";
-        }
-
-        Board boardResObj = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
-                new BoardRes.User(player.getId(),player.getName()),
-                new BoardRes.Current(session.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus, session.getHiddenWord())));
-        return ResponseEntity.ok(boardResObj);
-    }
+    // ── Leaderboard ───────────────────────────────────────────────────────────
 
     @GetMapping("/leaderboard")
     public ResponseEntity<LeaderBoard> getLeaderboard() {
         List<Player> players = playerRepo.findAll(Sort.by(Sort.Direction.DESC, "gamesWon"));
-        players.forEach(p -> p.setToken(null));
-        return ResponseEntity.ok(new LeaderBoard(players));
+        List<LeaderBoard.PlayerStats> stats = players.stream()
+                .map(p -> new LeaderBoard.PlayerStats(p.getName(), p.getGamesWon(), p.getGamesLost(), p.getAverageGuesses()))
+                .toList();
+        return ResponseEntity.ok(new LeaderBoard(stats));
     }
 
-    @GetMapping("/")
-    public ResponseEntity<Links> getLinks() {
-        Links all = buildAllLinks();
-        return ResponseEntity.ok(all);
-    }
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
-    //    public void printNewGameBoard(int wordLength)
-    @GetMapping(value="/new-game/{playerId}")
-    public ResponseEntity<Board> newGameById(@PathVariable Integer playerId) {
-        if(playerId == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        Optional<Player> play = playerRepo.findById(playerId);
-        if (play.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Player player = play.get();
-        if (player.getIsInGame()) {
-            //start new game (maybe change this idk)
-            //uses 007a-create-player-in-game-trigger
-        }
-        Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), playerId);
-        Game saved = gameRepo.save(newGame);
-
-        List<BoardRes.Guess> guessList = new ArrayList<>();
-        for (String guess : saved.getCurrentGuesses()) {
-            List<BoardRes.LetterResult> letterResults = new ArrayList<>();
-            String[] colors = gameEngine.evaluateGuessColors(saved.getHiddenWord(), guess, saved.getHiddenWord().length());
-            for(int i = 0; i < guess.length(); i++) {
-                String colorResult = "";
-                if(colors[i].equals(GameEngine.ANSI_GREEN)) {
-                    colorResult = "full";
-                }
-                else if (colors[i].equals(GameEngine.ANSI_YELLOW)) {
-                    colorResult = "partial";
-                }
-                else {
-                    colorResult = "none";
-                }
-                BoardRes.LetterResult result = new BoardRes.LetterResult(guess.charAt(i), colorResult);
-                letterResults.add(result);
-            }
-            BoardRes.Guess guessObj = new BoardRes.Guess(letterResults);
-            guessList.add(guessObj);
-        }
-
-        Integer status = saved.getStatus();
-        String resultStatus = "";
-        if (status == 0) {
-            resultStatus = "won";
-        }
-        else if (status == 1) {
-            resultStatus = "in-progress";
-        }
-        else if (status == 2){
-            resultStatus = "lost";
-        }
-        else {
-            resultStatus = "unknown";
-        }
-
-        Board boardResObj = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
-                new BoardRes.User(player.getId(),player.getName()),
-                new BoardRes.Current(saved.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus,saved.getHiddenWord())));
-        return ResponseEntity.ok(boardResObj);
-    }
-
-    @GetMapping(value="/new-game")
-    public ResponseEntity<Board> newGame(@RequestHeader("Authorization") String authorization) {
-        if(authorization == null) {
-            return ResponseEntity.badRequest().build();
+    private ResponseEntity<?> checkAuth(Integer playerId, String authorization) {
+        if (authorization == null || authorization.isBlank()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", Map.of("description", "Access denied")));
         }
         String token = authorization.replaceFirst("(?i)^Bearer\\s+", "");
-        Optional<Player> play = playerRepo.findFirstByToken(UUID.fromString(token));
-        if (play.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Player player = play.get();
-        if (player.getIsInGame()) {
-            //start new game (maybe change this idk)
-            //uses 007a-create-player-in-game-trigger
-        }
-        Game newGame = new Game(gameEngine.chooseRandomWord(player.getName()), new ArrayList<>(), player.getId());
-        Game saved = gameRepo.save(newGame);
-
-        List<BoardRes.Guess> guessList = new ArrayList<>();
-        for (String guess : saved.getCurrentGuesses()) {
-            List<BoardRes.LetterResult> letterResults = new ArrayList<>();
-            String[] colors = gameEngine.evaluateGuessColors(saved.getHiddenWord(), guess, saved.getHiddenWord().length());
-            for(int i = 0; i < guess.length(); i++) {
-                String colorResult = "";
-                if(colors[i].equals(GameEngine.ANSI_GREEN)) {
-                    colorResult = "full";
-                }
-                else if (colors[i].equals(GameEngine.ANSI_YELLOW)) {
-                    colorResult = "partial";
-                }
-                else {
-                    colorResult = "none";
-                }
-                BoardRes.LetterResult result = new BoardRes.LetterResult(guess.charAt(i), colorResult);
-                letterResults.add(result);
+        try {
+            int tokenId = Integer.parseInt(token);
+            if (tokenId != playerId) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", Map.of("description", "Access denied")));
             }
-            BoardRes.Guess guessObj = new BoardRes.Guess(letterResults);
-            guessList.add(guessObj);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", Map.of("description", "Access denied")));
         }
-
-        Integer status = saved.getStatus();
-        String resultStatus = "";
-        if (status == 0) {
-            resultStatus = "won";
-        }
-        else if (status == 1) {
-            resultStatus = "in-progress";
-        }
-        else if (status == 2){
-            resultStatus = "lost";
-        }
-        else {
-            resultStatus = "unknown";
-        }
-
-        Board boardResObj = new BoardRes(buildLinkForPlayer(GUESS_ENDPOINT_LINKS, player),
-                new BoardRes.User(player.getId(),player.getName()),
-                new BoardRes.Current(saved.getHiddenWord().length(),guessList,
-                        new BoardRes.Result(resultStatus, saved.getHiddenWord())));
-        return ResponseEntity.ok(boardResObj);
+        return null;
     }
 
-    @GetMapping(value="/getId/{playerName}")
-    public ResponseEntity<JsonNode> getIdByName(@PathVariable String playerName) {
-        Optional<Player> player = playerRepo.findFirstByName(playerName);
-        ObjectMapper objm = new ObjectMapper();
-        ObjectNode out = objm.createObjectNode();
-        out.put("id", "-2");
-        player.ifPresent(id -> out.put("id", player.get().getId()));
-        return ResponseEntity.ok(out);
+    private BoardRes buildBoardRes(Player player, Game game) {
+        List<BoardRes.Guess> guessList = new ArrayList<>();
+        for (String guess : game.getCurrentGuesses()) {
+            String[] colors = gameEngine.evaluateGuessColors(game.getHiddenWord(), guess, game.getHiddenWord().length());
+            List<BoardRes.LetterResult> letterResults = new ArrayList<>();
+            for (int i = 0; i < guess.length(); i++) {
+                String match = switch (colors[i]) {
+                    case GameEngine.ANSI_GREEN  -> "full";
+                    case GameEngine.ANSI_YELLOW -> "partial";
+                    default                     -> "none";
+                };
+                letterResults.add(new BoardRes.LetterResult(guess.charAt(i), match));
+            }
+            guessList.add(new BoardRes.Guess(letterResults));
+        }
+
+        String status = switch (game.getStatus()) {
+            case 0  -> "won";
+            case 2  -> "lost";
+            default -> "in-progress";
+        };
+
+        Links links = new Links(
+                null, null, null,
+                new Links.Board("/players/" + player.getId() + "/board"),
+                new Links.Guess("/players/" + player.getId() + "/guess")
+        );
+
+        return new BoardRes(
+                links,
+                new BoardRes.User(player.getId(), player.getName()),
+                new BoardRes.Current(game.getHiddenWord().length(), guessList,
+                        new BoardRes.Result(status, game.getHiddenWord()))
+        );
     }
 
-    @GetMapping(value="/getId")
-    public ResponseEntity<JsonNode> getId(@RequestHeader("Authorization") String authorization) {
-        String token = authorization.replaceFirst("(?i)^Bearer\\s+", "");
-        Optional<Player> player = playerRepo.findFirstByToken(UUID.fromString(token));
-        ObjectMapper objm = new ObjectMapper();
-        ObjectNode out = objm.createObjectNode();
-        out.put("id", "-2");
-        player.ifPresent(id -> out.put("id", player.get().getId()));
-        return ResponseEntity.ok(out);
+    private Map<String, Object> error(String description) {
+        return Map.of("error", Map.of("description", description));
     }
 }

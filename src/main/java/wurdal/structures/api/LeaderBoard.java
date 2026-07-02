@@ -1,8 +1,7 @@
 package wurdal.structures.api;
 
-import wurdal.structures.Player;
-
 import java.util.List;
 
-public record LeaderBoard(List<Player> players) implements ApiResponse {
+public record LeaderBoard(List<PlayerStats> players) {
+    public record PlayerStats(String name, int wins, int losses, double averageGuesses) {}
 }
