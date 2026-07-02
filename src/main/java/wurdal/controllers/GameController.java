@@ -115,11 +115,11 @@ public record GameController(PlayerRepository playerRepo, GameRepository gameRep
     }
 
     @PostMapping("/session")
-    public ResponseEntity<AuthResponse> login(@RequestBody CredentialsRequest req) {
+    public ResponseEntity<ApiResponse> login(@RequestBody CredentialsRequest req) {
         String name = req.username();
         Optional<Player> playerOp = playerRepo.findFirstByName(name);
         if (playerOp.isEmpty()) {
-            return ResponseEntity.badRequest().body(new AuthResponse("error: player does not exist", null, null));
+            return ResponseEntity.badRequest().body(new GenError("error: player does not exist"));
         }
         Player player = playerOp.get();
         return ResponseEntity.ok(new AuthResponse("message", player.getToken().toString(), null));
